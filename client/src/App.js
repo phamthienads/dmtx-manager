@@ -24,6 +24,36 @@ const theme = createTheme({
       main: '#dc004e',
     },
   },
+  breakpoints: {
+    values: {
+      xs: 0,
+      sm: 600,
+      md: 900,
+      lg: 1200,
+      xl: 1536,
+    },
+  },
+  components: {
+    MuiContainer: {
+      styleOverrides: {
+        root: {
+          padding: '16px',
+          '@media (max-width:600px)': {
+            padding: '8px',
+          },
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          '@media (max-width:600px)': {
+            margin: '8px 0',
+          },
+        },
+      },
+    },
+  },
 });
 
 function App() {

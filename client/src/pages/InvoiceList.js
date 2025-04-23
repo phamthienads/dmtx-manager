@@ -13,7 +13,13 @@ import {
   IconButton,
   Typography,
   Box,
-  Chip
+  Chip,
+  Card,
+  CardContent,
+  Grid,
+  useMediaQuery,
+  useTheme,
+  Divider
 } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, Visibility as VisibilityIcon } from '@mui/icons-material';
 import axiosInstance from '../utils/axios';
@@ -21,6 +27,8 @@ import axiosInstance from '../utils/axios';
 function InvoiceList() {
   const [invoices, setInvoices] = useState([]);
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   useEffect(() => {
     fetchInvoices();
@@ -94,19 +102,99 @@ function InvoiceList() {
     return isNaN(total) ? 0 : total;
   };
 
-  return (
-    <Container maxWidth="lg" sx={{ mt: 4 }}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4">Danh Sách Hóa Đơn</Typography>
-        <Button
-          variant="contained"
+  const renderMobileView = () => (
+    <Grid container spacing={2}>
+      {invoices.map((invoice) => (
+        <Grid item xs={12} key={invoice._id}>
+          <Card>
+            <CardContent>
+              <Box display="flex" justifyContent="space-between" alignItems="flex-start">
+                <Box>
+                  <Typography variant="h6" gutterBottom>
+                    {invoice.customer?.name || '-'}
+                  </Typography>
+                  <Box display="flex" gap={1} mb={1}>
+                    <Chip
+                      label={getInvoiceTypeText(invoice.invoiceType)}
+                      color="primary"
+                      size="small"
+                    />
+                    <Chip
+                      label={getStatusText(invoice.status)}
+                      color={getStatusColor(invoice.status)}
+                      size="small"
+                    />
+                  </Box>
+                </Box>
+                <Box>
+                  <IconButton
+                    color="primary"
+                    onClick={() => navigate(`/invoices/${invoice._id}`)}
+                    size="small"
+                  >
+                    <VisibilityIcon />
+                  </IconButton>
+                  <IconButton
           color="primary"
-          startIcon={<AddIcon />}
-          onClick={() => navigate('/invoices/new')}
-        >
-          Tạo Hóa Đơn Mới
-        </Button>
+                    onClick={() => navigate(`/invoices/edit/${invoice._id}`)}
+                    size="small"
+                  >
+                    <EditIcon />
+                  </IconButton>
+                  <IconButton
+                    color="error"
+                    onClick={() => handleDelete(invoice._id)}
+                    size="small"
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                </Box>
       </Box>
+              <Divider sx={{ my: 1 }} />
+              <Grid container spacing={1}>
+                <Grid item xs={6}>
+                  <Typography variant="body2" color="textSecondary">
+                    Số sản phẩm:
+                  </Typography>
+                  <Typography variant="body1">
+                    {invoice.items.length}
+                  </Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="body2" color="textSecondary">
+                    Tổng tiền:
+                  </Typography>
+                  <Typography variant="body1" color="primary" fontWeight="bold">
+                    {calculateTotal(invoice.items).toLocaleString('vi-VN')} VNĐ
+                  </Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="body2" color="textSecondary">
+                    Ngày xuất:
+                  </Typography>
+                  <Typography variant="body1">
+                    {new Date(invoice.createdAt).toLocaleDateString('vi-VN')}
+                  </Typography>
+                </Grid>
+                {invoice.status === 'debt' && invoice.debtEndDate && (
+                  <Grid item xs={6}>
+                    <Typography variant="body2" color="textSecondary">
+                      Hạn thanh toán:
+                    </Typography>
+                    <Typography variant="body1" color="error">
+                      {new Date(invoice.debtEndDate).toLocaleDateString('vi-VN')}
+                    </Typography>
+                  </Grid>
+                )}
+              </Grid>
+            </CardContent>
+          </Card>
+        </Grid>
+      ))}
+    </Grid>
+  );
+
+  const renderDesktopView = () => (
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
@@ -172,6 +260,22 @@ function InvoiceList() {
           </TableBody>
         </Table>
       </TableContainer>
+  );
+
+  return (
+    <Container maxWidth="lg" sx={{ mt: 4 }}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+        <Typography variant="h4">Danh Sách Hóa Đơn</Typography>
+        <Button
+          variant="contained"
+          color="primary"
+          startIcon={<AddIcon />}
+          onClick={() => navigate('/invoices/new')}
+        >
+          Tạo Hóa Đơn Mới
+        </Button>
+      </Box>
+      {isMobile ? renderMobileView() : renderDesktopView()}
     </Container>
   );
 }

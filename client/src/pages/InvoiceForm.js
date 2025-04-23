@@ -18,7 +18,15 @@ import {
   TableCell,
   TableContainer,
   TableHead,
-  TableRow
+  TableRow,
+  useMediaQuery,
+  useTheme,
+  Card,
+  CardContent,
+  Divider,
+  Stepper,
+  Step,
+  StepLabel
 } from '@mui/material';
 import { Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
 import axiosInstance from '../utils/axios';
@@ -37,6 +45,9 @@ function InvoiceForm() {
   const navigate = useNavigate();
   const { id } = useParams();
   const isEdit = Boolean(id);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const [activeStep, setActiveStep] = useState(0);
 
   useEffect(() => {
     fetchCustomers();
@@ -287,231 +298,433 @@ function InvoiceForm() {
     }
   };
 
-  return (
-    <Container maxWidth="md" sx={{ mt: 4 }}>
-      <Paper sx={{ p: 3 }}>
-        <Typography variant="h5" gutterBottom>
-          {isEdit ? 'Sửa Hóa Đơn' : 'Tạo Hóa Đơn Mới'}
+  const renderCustomerInfo = () => (
+    <Card sx={{ mb: 3 }}>
+      <CardContent>
+        <Typography variant="h6" gutterBottom>
+          Thông tin khách hàng
         </Typography>
-        <form onSubmit={handleSubmit}>
-          <Grid container spacing={3}>
-            <Grid item xs={12}>
-              <FormControl fullWidth>
-                <InputLabel>Khách Hàng *</InputLabel>
-                <Select
-                  name="customer"
-                  value={formData.customer}
-                  onChange={handleChange}
-                  required
-                >
-                  {customers.map((customer) => (
-                    <MenuItem key={customer._id} value={customer._id}>
-                      {customer.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12}>
-              <FormControl fullWidth>
-                <InputLabel>Loại Hóa Đơn *</InputLabel>
-                <Select
-                  name="invoiceType"
-                  value={formData.invoiceType}
-                  onChange={handleChange}
-                  required
-                >
-                  <MenuItem value="retail">Hóa Đơn Bán Lẻ</MenuItem>
-                  <MenuItem value="wholesale">Hóa Đơn Bán Sỉ</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12}>
-              <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                <Typography variant="h6">Sản Phẩm</Typography>
-                <Button
-                  startIcon={<AddIcon />}
-                  onClick={addItem}
-                  variant="outlined"
-                >
-                  Thêm Sản Phẩm
-                </Button>
-              </Box>
-              <TableContainer>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Sản Phẩm</TableCell>
-                      <TableCell>Số Lượng *</TableCell>
-                      <TableCell>Giá *</TableCell>
-                      <TableCell>Chiết Khấu</TableCell>
-                      <TableCell>Thành Tiền</TableCell>
-                      <TableCell>Thao Tác</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {formData.items.map((item, index) => (
-                      <TableRow key={index}>
-                        <TableCell>
-                          <FormControl fullWidth>
-                            <Select
-                              value={item.product}
-                              onChange={(e) => handleItemChange(index, 'product', e.target.value)}
-                              required
-                            >
-                              {products.map((product) => (
-                                <MenuItem key={product._id} value={product._id}>
-                                  {product.name}
-                                </MenuItem>
-                              ))}
-                            </Select>
-                          </FormControl>
-                        </TableCell>
-                        <TableCell>
-                          <TextField
-                            type="number"
-                            value={item.quantity}
-                            onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
-                            required
-                            inputProps={{ min: 1 }}
-                            error={!item.quantity || item.quantity < 1}
-                            helperText={!item.quantity || item.quantity < 1 ? 'Số lượng không hợp lệ' : ''}
-                            size="small"
-                            sx={{ width: '80px' }}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <TextField
-                            type="number"
-                            value={item.price}
-                            onChange={(e) => handleItemChange(index, 'price', e.target.value)}
-                            InputProps={{
-                              endAdornment: 'VNĐ'
-                            }}
-                            error={item.price < 0}
-                            helperText={item.price < 0 ? 'Giá không hợp lệ' : ''}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <TextField
-                            type="number"
-                            value={item.discount}
-                            onChange={(e) => handleItemChange(index, 'discount', e.target.value)}
-                            InputProps={{
-                              endAdornment: '%'
-                            }}
-                            helperText={`${calculateItemDiscount(item).toLocaleString('vi-VN')} VNĐ`}
-                            inputProps={{ min: 0, max: 100 }}
-                            size="small"
-                            sx={{ width: '80px' }}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          {((Number(item.price) * Number(item.quantity)) - calculateItemDiscount(item)).toLocaleString('vi-VN')} VNĐ
-                        </TableCell>
-                        <TableCell>
-                          <IconButton
-                            color="error"
-                            onClick={() => removeItem(index)}
-                            disabled={formData.items.length === 1}
-                          >
-                            <DeleteIcon />
-                          </IconButton>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </Grid>
-            <Grid item xs={12}>
-              <Box display="flex" justifyContent="flex-end" gap={2}>
-                <Typography variant="subtitle1">
-                  Tổng tiền: {calculateSubtotal().toLocaleString('vi-VN')} VNĐ
-                </Typography>
-              </Box>
-            </Grid>
-            <Grid item xs={12}>
-              <Box display="flex" justifyContent="flex-end" gap={2}>
-                <Typography variant="subtitle1">
-                  Tổng chiết khấu: {calculateTotalDiscount().toLocaleString('vi-VN')} VNĐ
-                </Typography>
-              </Box>
-            </Grid>
-            <Grid item xs={12}>
-              <Box display="flex" justifyContent="flex-end" gap={2}>
-                <Typography variant="h6">
-                  Thành tiền: {calculateTotal().toLocaleString('vi-VN')} VNĐ
-                </Typography>
-              </Box>
-            </Grid>
-            <Grid item xs={12}>
-              <FormControl fullWidth>
-                <InputLabel>Trạng Thái *</InputLabel>
-                <Select
-                  name="status"
-                  value={formData.status}
-                  onChange={handleChange}
-                  required
-                >
-                  <MenuItem value="paid">Đã Thanh Toán</MenuItem>
-                  <MenuItem value="debt">Công Nợ</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            {formData.status === 'debt' && (
-              <>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Công Nợ Từ Ngày"
-                    name="debtStartDate"
-                    type="date"
-                    value={formData.debtStartDate}
-                    onChange={handleChange}
-                    required
-                    InputLabelProps={{
-                      shrink: true,
-                    }}
-                    disabled
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Công Nợ Đến Ngày"
-                    name="debtEndDate"
-                    type="date"
-                    value={formData.debtEndDate}
-                    onChange={handleChange}
-                    required
-                    InputLabelProps={{
-                      shrink: true,
-                    }}
-                  />
-                </Grid>
-              </>
-            )}
-            <Grid item xs={12}>
-              <Box display="flex" justifyContent="flex-end" gap={2}>
-                <Button
-                  variant="outlined"
-                  onClick={() => navigate('/invoices')}
-                >
-                  Hủy
-                </Button>
-                <Button
-                  type="submit"
-                  variant="contained"
-                  color="primary"
-                >
-                  {isEdit ? 'Cập Nhật' : 'Tạo Mới'}
-                </Button>
-              </Box>
-            </Grid>
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={6}>
+            <FormControl fullWidth>
+              <InputLabel>Khách hàng</InputLabel>
+              <Select
+                name="customer"
+                value={formData.customer}
+                onChange={handleChange}
+                label="Khách hàng"
+              >
+                {customers.map((customer) => (
+                  <MenuItem key={customer._id} value={customer._id}>
+                    {customer.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </Grid>
-        </form>
-      </Paper>
+          <Grid item xs={12} sm={6}>
+            <FormControl fullWidth>
+              <InputLabel>Loại hóa đơn</InputLabel>
+              <Select
+                name="invoiceType"
+                value={formData.invoiceType}
+                onChange={handleChange}
+                label="Loại hóa đơn"
+              >
+                <MenuItem value="retail">Bán lẻ</MenuItem>
+                <MenuItem value="wholesale">Bán sỉ</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+        </Grid>
+      </CardContent>
+    </Card>
+  );
+
+  const renderItemsList = () => (
+    <Card sx={{ mb: 3 }}>
+      <CardContent>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+          <Typography variant="h6">Danh sách sản phẩm</Typography>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<AddIcon />}
+            onClick={addItem}
+            size={isMobile ? "small" : "medium"}
+          >
+            Thêm sản phẩm
+          </Button>
+        </Box>
+        {isMobile ? (
+          <Grid container spacing={2}>
+            {formData.items.map((item, index) => (
+              <Grid item xs={12} key={index}>
+                <Card variant="outlined">
+                  <CardContent>
+                    <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                      <Typography variant="subtitle1">Sản phẩm {index + 1}</Typography>
+                      <IconButton
+                        color="error"
+                        onClick={() => removeItem(index)}
+                        size="small"
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Box>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12}>
+                        <FormControl fullWidth>
+                          <InputLabel>Sản phẩm</InputLabel>
+                          <Select
+                            value={item.product}
+                            onChange={(e) => handleItemChange(index, 'product', e.target.value)}
+                            label="Sản phẩm"
+                          >
+                            {products.map((product) => (
+                              <MenuItem key={product._id} value={product._id}>
+                                {product.name}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <TextField
+                          fullWidth
+                          label="Số lượng"
+                          type="number"
+                          value={item.quantity}
+                          onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
+                        />
+                      </Grid>
+                      <Grid item xs={6}>
+                        <TextField
+                          fullWidth
+                          label="Giá"
+                          type="number"
+                          value={item.price}
+                          onChange={(e) => handleItemChange(index, 'price', e.target.value)}
+                        />
+                      </Grid>
+                      <Grid item xs={12}>
+                        <TextField
+                          fullWidth
+                          label="Chiết khấu (%)"
+                          type="number"
+                          value={item.discount}
+                          onChange={(e) => handleItemChange(index, 'discount', e.target.value)}
+                        />
+                      </Grid>
+                    </Grid>
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        ) : (
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Sản phẩm</TableCell>
+                  <TableCell>Số lượng</TableCell>
+                  <TableCell>Giá</TableCell>
+                  <TableCell>Chiết khấu (%)</TableCell>
+                  <TableCell>Thành tiền</TableCell>
+                  <TableCell>Thao tác</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {formData.items.map((item, index) => (
+                  <TableRow key={index}>
+                    <TableCell>
+                      <FormControl fullWidth>
+                        <Select
+                          value={item.product}
+                          onChange={(e) => handleItemChange(index, 'product', e.target.value)}
+                        >
+                          {products.map((product) => (
+                            <MenuItem key={product._id} value={product._id}>
+                              {product.name}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </TableCell>
+                    <TableCell>
+                      <TextField
+                        type="number"
+                        value={item.quantity}
+                        onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <TextField
+                        type="number"
+                        value={item.price}
+                        onChange={(e) => handleItemChange(index, 'price', e.target.value)}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <TextField
+                        type="number"
+                        value={item.discount}
+                        onChange={(e) => handleItemChange(index, 'discount', e.target.value)}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      {(item.price * item.quantity * (1 - item.discount / 100)).toLocaleString('vi-VN')} VNĐ
+                    </TableCell>
+                    <TableCell>
+                      <IconButton
+                        color="error"
+                        onClick={() => removeItem(index)}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
+      </CardContent>
+    </Card>
+  );
+
+  const renderPaymentInfo = () => (
+    <Card sx={{ mb: 3 }}>
+      <CardContent>
+        <Typography variant="h6" gutterBottom>
+          Thông tin thanh toán
+        </Typography>
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={6}>
+            <FormControl fullWidth>
+              <InputLabel>Trạng thái</InputLabel>
+              <Select
+                name="status"
+                value={formData.status}
+                onChange={handleChange}
+                label="Trạng thái"
+              >
+                <MenuItem value="paid">Đã thanh toán</MenuItem>
+                <MenuItem value="debt">Công nợ</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+          {formData.status === 'debt' && (
+            <>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Ngày bắt đầu"
+                  type="date"
+                  name="debtStartDate"
+                  value={formData.debtStartDate}
+                  onChange={handleChange}
+                  InputLabelProps={{ shrink: true }}
+                  disabled
+                  size="medium"
+                  sx={{
+                    '& .MuiInputBase-input': {
+                      fontSize: '1rem',
+                      padding: '16px 20px',
+                      height: 'auto'
+                    },
+                    '& .MuiOutlinedInput-root': {
+                      height: 'auto'
+                    },
+                    '& .MuiInputBase-root': {
+                      height: '56px'
+                    }
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Hạn thanh toán"
+                  type="date"
+                  name="debtEndDate"
+                  value={formData.debtEndDate}
+                  onChange={handleChange}
+                  InputLabelProps={{ shrink: true }}
+                  size="medium"
+                  sx={{
+                    '& .MuiInputBase-input': {
+                      fontSize: '1rem',
+                      padding: '16px 20px',
+                      height: 'auto'
+                    },
+                    '& .MuiOutlinedInput-root': {
+                      height: 'auto'
+                    },
+                    '& .MuiInputBase-root': {
+                      height: '56px'
+                    }
+                  }}
+                />
+              </Grid>
+            </>
+          )}
+        </Grid>
+      </CardContent>
+    </Card>
+  );
+
+  const renderSummary = () => (
+    <Card sx={{ mb: 3 }}>
+      <CardContent>
+        <Typography variant="h6" gutterBottom>
+          Tổng kết
+        </Typography>
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={6}>
+            <Typography variant="body1">
+              Tổng tiền: {calculateSubtotal().toLocaleString('vi-VN')} VNĐ
+            </Typography>
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <Typography variant="body1">
+              Chiết khấu: {calculateTotalDiscount().toLocaleString('vi-VN')} VNĐ
+            </Typography>
+          </Grid>
+          <Grid item xs={12}>
+            <Typography variant="h6" color="primary">
+              Thành tiền: {calculateTotal().toLocaleString('vi-VN')} VNĐ
+            </Typography>
+          </Grid>
+        </Grid>
+      </CardContent>
+    </Card>
+  );
+
+  return (
+    <Container maxWidth="lg" sx={{ mt: 4 }}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+        <Typography 
+          variant={isMobile ? "h5" : "h4"} 
+          sx={{ 
+            fontWeight: 600,
+            color: 'primary.main',
+            textAlign: isMobile ? 'center' : 'left',
+            width: isMobile ? '100%' : 'auto',
+            fontSize: isMobile ? '1.25rem' : '1.5rem',
+            padding: isMobile ? '8px 0' : '0'
+          }}
+        >
+          {isEdit ? 'Chỉnh sửa hóa đơn' : 'Tạo hóa đơn mới'}
+        </Typography>
+        {!isMobile && (
+          <Button
+            variant="outlined"
+            onClick={() => navigate('/invoices')}
+            sx={{
+              minWidth: '120px',
+              height: '40px'
+            }}
+          >
+            Quay lại
+          </Button>
+        )}
+      </Box>
+
+      {isMobile && (
+        <Box display="flex" justifyContent="center" mb={2}>
+          <Button
+            variant="outlined"
+            onClick={() => navigate('/invoices')}
+            size="small"
+            sx={{
+              width: '100%',
+              maxWidth: '200px',
+              height: '36px',
+              fontSize: '0.875rem'
+            }}
+          >
+            Quay lại
+          </Button>
+        </Box>
+      )}
+
+      {isMobile ? (
+        <Stepper activeStep={activeStep} orientation="vertical">
+          <Step>
+            <StepLabel 
+              sx={{ 
+                '& .MuiStepLabel-label': { 
+                  fontSize: isMobile ? '0.875rem' : '1rem',
+                  padding: isMobile ? '8px 0' : '0'
+                }
+              }}
+            >
+              Thông tin khách hàng
+            </StepLabel>
+            {renderCustomerInfo()}
+          </Step>
+          <Step>
+            <StepLabel 
+              sx={{ 
+                '& .MuiStepLabel-label': { 
+                  fontSize: isMobile ? '0.875rem' : '1rem',
+                  padding: isMobile ? '8px 0' : '0'
+                }
+              }}
+            >
+              Danh sách sản phẩm
+            </StepLabel>
+            {renderItemsList()}
+          </Step>
+          <Step>
+            <StepLabel 
+              sx={{ 
+                '& .MuiStepLabel-label': { 
+                  fontSize: isMobile ? '0.875rem' : '1rem',
+                  padding: isMobile ? '8px 0' : '0'
+                }
+              }}
+            >
+              Thông tin thanh toán
+            </StepLabel>
+            {renderPaymentInfo()}
+          </Step>
+          <Step>
+            <StepLabel 
+              sx={{ 
+                '& .MuiStepLabel-label': { 
+                  fontSize: isMobile ? '0.875rem' : '1rem',
+                  padding: isMobile ? '8px 0' : '0'
+                }
+              }}
+            >
+              Tổng kết
+            </StepLabel>
+            {renderSummary()}
+          </Step>
+        </Stepper>
+      ) : (
+        <>
+          {renderCustomerInfo()}
+          {renderItemsList()}
+          {renderPaymentInfo()}
+          {renderSummary()}
+        </>
+      )}
+
+      <Box display="flex" justifyContent="flex-end" mt={3}>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleSubmit}
+          size={isMobile ? "small" : "medium"}
+          fullWidth={isMobile}
+        >
+          {isEdit ? 'Cập nhật' : 'Tạo hóa đơn'}
+        </Button>
+      </Box>
     </Container>
   );
 }

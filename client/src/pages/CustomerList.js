@@ -15,7 +15,13 @@ import {
   Box,
   Chip,
   TextField,
-  InputAdornment
+  InputAdornment,
+  Card,
+  CardContent,
+  Grid,
+  useMediaQuery,
+  useTheme,
+  Divider
 } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, Visibility as VisibilityIcon, Search as SearchIcon } from '@mui/icons-material';
 import axiosInstance from '../utils/axios';
@@ -24,6 +30,8 @@ function CustomerList() {
   const [customers, setCustomers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   useEffect(() => {
     fetchCustomers();
@@ -77,36 +85,93 @@ function CustomerList() {
     }
   };
 
-  return (
-    <Container maxWidth="lg" sx={{ mt: 4 }}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4">Danh Sách Khách Hàng</Typography>
-        <Button
-          variant="contained"
+  const renderMobileView = () => (
+    <Grid container spacing={2}>
+      {customers.map((customer) => (
+        <Grid item xs={12} key={customer._id}>
+          <Card>
+            <CardContent>
+              <Box display="flex" justifyContent="space-between" alignItems="flex-start">
+                <Box>
+                  <Typography variant="h6" gutterBottom>
+                    {customer.name}
+                  </Typography>
+                  <Chip
+                    label={getCustomerTypeText(customer.customerType)}
+                    color={getCustomerTypeColor(customer.customerType)}
+                    size="small"
+                    sx={{ mb: 1 }}
+                  />
+                </Box>
+                <Box>
+                  <IconButton
+                    color="primary"
+                    onClick={() => navigate(`/customers/${customer._id}`)}
+                    size="small"
+                  >
+                    <VisibilityIcon />
+                  </IconButton>
+                  <IconButton
           color="primary"
-          startIcon={<AddIcon />}
-          onClick={() => navigate('/customers/new')}
-        >
-          Thêm Khách Hàng
-        </Button>
+                    onClick={() => navigate(`/customers/edit/${customer._id}`)}
+                    size="small"
+                  >
+                    <EditIcon />
+                  </IconButton>
+                  <IconButton
+                    color="error"
+                    onClick={() => handleDelete(customer._id)}
+                    size="small"
+                  >
+                    <DeleteIcon />
+                  </IconButton>
       </Box>
-
-      <Box mb={3}>
-        <TextField
-          fullWidth
-          placeholder="Tìm kiếm theo tên hoặc số điện thoại..."
-          value={searchTerm}
-          onChange={handleSearch}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            ),
-          }}
-        />
       </Box>
+              <Divider sx={{ my: 1 }} />
+              <Grid container spacing={1}>
+                <Grid item xs={12}>
+                  <Typography variant="body2" color="textSecondary">
+                    Email:
+                  </Typography>
+                  <Typography variant="body1">
+                    {customer.email || '-'}
+                  </Typography>
+                </Grid>
+                <Grid item xs={12}>
+                  <Typography variant="body2" color="textSecondary">
+                    Số điện thoại:
+                  </Typography>
+                  <Typography variant="body1">
+                    {customer.phone || '-'}
+                  </Typography>
+                </Grid>
+                <Grid item xs={12}>
+                  <Typography variant="body2" color="textSecondary">
+                    Địa chỉ:
+                  </Typography>
+                  <Typography variant="body1">
+                    {customer.address || '-'}
+                  </Typography>
+                </Grid>
+                {customer.taxCode && (
+                  <Grid item xs={12}>
+                    <Typography variant="body2" color="textSecondary">
+                      Mã số thuế:
+                    </Typography>
+                    <Typography variant="body1">
+                      {customer.taxCode}
+                    </Typography>
+                  </Grid>
+                )}
+              </Grid>
+            </CardContent>
+          </Card>
+        </Grid>
+      ))}
+    </Grid>
+  );
 
+  const renderDesktopView = () => (
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
@@ -160,6 +225,39 @@ function CustomerList() {
           </TableBody>
         </Table>
       </TableContainer>
+  );
+
+  return (
+    <Container maxWidth="lg" sx={{ mt: 4 }}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+        <Typography variant="h4">Danh Sách Khách Hàng</Typography>
+        <Button
+          variant="contained"
+          color="primary"
+          startIcon={<AddIcon />}
+          onClick={() => navigate('/customers/new')}
+        >
+          Thêm Khách Hàng
+        </Button>
+      </Box>
+
+      <Box mb={3}>
+        <TextField
+          fullWidth
+          placeholder="Tìm kiếm theo tên hoặc số điện thoại..."
+          value={searchTerm}
+          onChange={handleSearch}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            ),
+          }}
+        />
+      </Box>
+
+      {isMobile ? renderMobileView() : renderDesktopView()}
     </Container>
   );
 }
