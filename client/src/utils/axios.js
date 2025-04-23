@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+const API_URL = process.env.REACT_APP_API_URL || window.location.origin;
 
 // Tạo instance axios với base URL
 const axiosInstance = axios.create({
