@@ -30,7 +30,7 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Router basename="/client">
+      <Router>
         <Routes>
           <Route path="/login" element={<Login />} />
           
