@@ -17,8 +17,6 @@ import {
 } from '@mui/icons-material';
 import axiosInstance from '../utils/axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
-
 function Dashboard() {
   const [stats, setStats] = useState({
     totalCustomers: 0,

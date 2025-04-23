@@ -19,8 +19,6 @@ import {
 import { ArrowBack as ArrowBackIcon, Edit as EditIcon, Print as PrintIcon } from '@mui/icons-material';
 import axiosInstance from '../utils/axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
-
 function InvoiceDetail() {
   const [invoice, setInvoice] = useState(null);
   const { id } = useParams();

@@ -17,8 +17,6 @@ import {
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
 import axiosInstance from '../utils/axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
-
 function ProductList() {
   const [products, setProducts] = useState([]);
   const navigate = useNavigate();
