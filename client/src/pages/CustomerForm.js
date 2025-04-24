@@ -11,7 +11,8 @@ import {
   FormControl,
   InputLabel,
   Select,
-  MenuItem
+  MenuItem,
+  Alert
 } from '@mui/material';
 import axiosInstance from '../utils/axios';
 
@@ -24,6 +25,7 @@ function CustomerForm() {
     taxCode: '',
     customerType: 'retail'
   });
+  const [error, setError] = useState('');
   const navigate = useNavigate();
   const { id } = useParams();
   const isEdit = Boolean(id);
@@ -52,6 +54,7 @@ function CustomerForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
     try {
       if (isEdit) {
         await axiosInstance.patch(`/api/customers/${id}`, formData);
@@ -61,6 +64,11 @@ function CustomerForm() {
       navigate('/customers');
     } catch (error) {
       console.error('Error saving customer:', error);
+      if (error.response?.data?.message) {
+        setError(error.response.data.message);
+      } else {
+        setError('Có lỗi xảy ra khi lưu thông tin khách hàng. Vui lòng thử lại.');
+      }
     }
   };
 
@@ -70,6 +78,11 @@ function CustomerForm() {
         <Typography variant="h5" gutterBottom>
           {isEdit ? 'Sửa Khách Hàng' : 'Thêm Khách Hàng Mới'}
         </Typography>
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
         <form onSubmit={handleSubmit}>
           <Grid container spacing={3}>
             <Grid item xs={12}>
@@ -99,11 +112,12 @@ function CustomerForm() {
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="Email"
+                label="Email (Không bắt buộc)"
                 name="email"
                 type="email"
                 value={formData.email}
                 onChange={handleChange}
+                helperText="Có thể để trống"
               />
             </Grid>
             <Grid item xs={12}>
@@ -129,10 +143,11 @@ function CustomerForm() {
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="Mã Số Thuế"
+                label="Mã Số Thuế (Không bắt buộc)"
                 name="taxCode"
                 value={formData.taxCode}
                 onChange={handleChange}
+                helperText="Có thể để trống"
               />
             </Grid>
             <Grid item xs={12}>

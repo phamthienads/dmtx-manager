@@ -36,6 +36,7 @@ function ProductList() {
   const fetchProducts = async () => {
     try {
       const response = await axiosInstance.get('/api/products');
+      console.log('Products data:', response.data);
       setProducts(response.data);
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -92,7 +93,7 @@ function ProductList() {
                     Giá nhập:
                   </Typography>
                   <Typography variant="body1">
-                    {product.importPrice.toLocaleString('vi-VN')} VNĐ
+                    {product.importPrice ? product.importPrice.toLocaleString('vi-VN') : '0'} VNĐ
                   </Typography>
                 </Grid>
                 <Grid item xs={6}>
@@ -100,7 +101,7 @@ function ProductList() {
                     Giá bán lẻ:
                   </Typography>
                   <Typography variant="body1">
-                    {product.retailPrice.toLocaleString('vi-VN')} VNĐ
+                    {product.retailPrice ? product.retailPrice.toLocaleString('vi-VN') : '0'} VNĐ
                   </Typography>
                 </Grid>
                 <Grid item xs={6}>
@@ -108,7 +109,7 @@ function ProductList() {
                     Giá bán sỉ:
                   </Typography>
                   <Typography variant="body1">
-                    {product.wholesalePrice.toLocaleString('vi-VN')} VNĐ
+                    {product.wholesalePrice ? product.wholesalePrice.toLocaleString('vi-VN') : '0'} VNĐ
                   </Typography>
                 </Grid>
                 <Grid item xs={6}>
@@ -116,7 +117,7 @@ function ProductList() {
                     Tồn kho:
                   </Typography>
                   <Typography variant="body1">
-                    {product.stock}
+                    {product.stock || 0}
                   </Typography>
                 </Grid>
                 <Grid item xs={12}>
@@ -124,7 +125,7 @@ function ProductList() {
                     Tổng tiền hàng:
                   </Typography>
                   <Typography variant="body1" color="primary">
-                    {(product.importPrice * product.stock).toLocaleString('vi-VN')} VNĐ
+                    {((product.importPrice || 0) * (product.stock || 0)).toLocaleString('vi-VN')} VNĐ
                   </Typography>
                 </Grid>
               </Grid>
@@ -155,9 +156,9 @@ function ProductList() {
               <TableRow key={product._id}>
                 <TableCell>{product.name}</TableCell>
                 <TableCell>{product.code || '-'}</TableCell>
-                <TableCell>{product.importPrice.toLocaleString('vi-VN')} VNĐ</TableCell>
-                <TableCell>{product.retailPrice.toLocaleString('vi-VN')} VNĐ</TableCell>
-                <TableCell>{product.wholesalePrice.toLocaleString('vi-VN')} VNĐ</TableCell>
+                <TableCell>{product.importPrice ? product.importPrice.toLocaleString('vi-VN') : '0'} VNĐ</TableCell>
+                <TableCell>{product.retailPrice ? product.retailPrice.toLocaleString('vi-VN') : '0'} VNĐ</TableCell>
+                <TableCell>{product.wholesalePrice ? product.wholesalePrice.toLocaleString('vi-VN') : '0'} VNĐ</TableCell>
                 <TableCell>{product.stock}</TableCell>
                 <TableCell>{(product.importPrice * product.stock).toLocaleString('vi-VN')} VNĐ</TableCell>
                 <TableCell>

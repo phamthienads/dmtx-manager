@@ -7,8 +7,7 @@ const customerSchema = new mongoose.Schema({
   },
   email: {
     type: String,
-    unique: true,
-    sparse: true
+    default: null
   },
   phone: {
     type: String
@@ -18,8 +17,7 @@ const customerSchema = new mongoose.Schema({
   },
   taxCode: {
     type: String,
-    unique: true,
-    sparse: true
+    default: null
   },
   customerType: {
     type: String,
