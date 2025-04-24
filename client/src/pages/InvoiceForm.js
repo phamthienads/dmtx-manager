@@ -30,6 +30,7 @@ import {
 } from '@mui/material';
 import { Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
 import axiosInstance from '../utils/axios';
+import { calculateItemTotal, calculateInvoiceTotal, formatMoney } from '../utils/moneyUtils';
 
 function InvoiceForm() {
   const [customers, setCustomers] = useState([]);
@@ -37,10 +38,11 @@ function InvoiceForm() {
   const [formData, setFormData] = useState({
     customer: '',
     invoiceType: 'retail',
-    items: [{ product: '', quantity: 1, price: 0, discount: 0 }],
     status: 'paid',
-    debtStartDate: new Date().toISOString().split('T')[0],
-    debtEndDate: ''
+    items: [{ product: '', quantity: 1, price: 0, discount: 0 }],
+    debtStartDate: '',
+    debtEndDate: '',
+    createdAt: new Date().toISOString().split('T')[0]
   });
   const navigate = useNavigate();
   const { id } = useParams();
@@ -81,15 +83,16 @@ function InvoiceForm() {
       setFormData({
         customer: response.data.customer._id,
         invoiceType: response.data.invoiceType,
+        status: response.data.status,
         items: response.data.items.map(item => ({
           product: item.product._id,
-          quantity: item.quantity,
-          price: item.price,
+          quantity: item.quantity || 1,
+          price: item.price || 0,
           discount: item.discount || 0
         })),
-        status: response.data.status,
-        debtStartDate: response.data.debtStartDate || new Date().toISOString().split('T')[0],
-        debtEndDate: response.data.debtEndDate ? new Date(response.data.debtEndDate).toISOString().split('T')[0] : ''
+        debtStartDate: response.data.debtStartDate || '',
+        debtEndDate: response.data.debtEndDate ? new Date(response.data.debtEndDate).toISOString().split('T')[0] : '',
+        createdAt: new Date(response.data.createdAt).toISOString().split('T')[0]
       });
     } catch (error) {
       console.error('Error fetching invoice:', error);
@@ -201,8 +204,7 @@ function InvoiceForm() {
     const itemTotal = Number(item.price) * Number(item.quantity);
     if (isNaN(itemTotal)) return 0;
     const discountAmount = (itemTotal * Number(item.discount || 0) / 100);
-    // Làm tròn đến ngàn
-    return Math.round(discountAmount / 1000) * 1000;
+    return discountAmount;
   };
 
   // Tính tổng giá trị chiết khấu
@@ -214,10 +216,7 @@ function InvoiceForm() {
 
   // Tính tổng tiền sau chiết khấu
   const calculateTotal = () => {
-    const subtotal = calculateSubtotal();
-    const discount = calculateTotalDiscount();
-    const total = subtotal - discount;
-    return isNaN(total) ? 0 : total;
+    return calculateInvoiceTotal(formData.items);
   };
 
   const handleSubmit = async (e) => {
@@ -261,7 +260,8 @@ function InvoiceForm() {
         customer: formData.customer,
         invoiceType: formData.invoiceType,
         status: formData.status,
-        items
+        items,
+        createdAt: formData.createdAt
       };
 
       // Thêm thông tin công nợ nếu là hóa đơn công nợ
@@ -335,6 +335,17 @@ function InvoiceForm() {
                 <MenuItem value="wholesale">Bán sỉ</MenuItem>
               </Select>
             </FormControl>
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="Ngày xuất hóa đơn"
+              type="date"
+              name="createdAt"
+              value={formData.createdAt}
+              onChange={handleChange}
+              InputLabelProps={{ shrink: true }}
+            />
           </Grid>
         </Grid>
       </CardContent>
@@ -474,7 +485,7 @@ function InvoiceForm() {
                       />
                     </TableCell>
                     <TableCell>
-                      {(item.price * item.quantity * (1 - item.discount / 100)).toLocaleString('vi-VN')} VNĐ
+                      {formatMoney(calculateItemTotal(item.price, item.quantity, item.discount))}
                     </TableCell>
                     <TableCell>
                       <IconButton
@@ -584,17 +595,17 @@ function InvoiceForm() {
         <Grid container spacing={2}>
           <Grid item xs={12} sm={6}>
             <Typography variant="body1">
-              Tổng tiền: {calculateSubtotal().toLocaleString('vi-VN')} VNĐ
+              Tổng tiền: {formatMoney(calculateSubtotal())}
             </Typography>
           </Grid>
           <Grid item xs={12} sm={6}>
             <Typography variant="body1">
-              Chiết khấu: {calculateTotalDiscount().toLocaleString('vi-VN')} VNĐ
+              Chiết khấu: {formatMoney(calculateTotalDiscount())}
             </Typography>
           </Grid>
           <Grid item xs={12}>
             <Typography variant="h6" color="primary">
-              Thành tiền: {calculateTotal().toLocaleString('vi-VN')} VNĐ
+              Thành tiền: {formatMoney(calculateTotal())}
             </Typography>
           </Grid>
         </Grid>

@@ -23,6 +23,7 @@ import {
 } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, Visibility as VisibilityIcon } from '@mui/icons-material';
 import axiosInstance from '../utils/axios';
+import { formatMoney, calculateInvoiceTotal } from '../utils/moneyUtils';
 
 function InvoiceList() {
   const [invoices, setInvoices] = useState([]);
@@ -89,17 +90,7 @@ function InvoiceList() {
 
   // Tính tổng tiền sau chiết khấu
   const calculateTotal = (items) => {
-    const subtotal = items.reduce((total, item) => {
-      const itemTotal = Number(item.price) * Number(item.quantity);
-      return total + (isNaN(itemTotal) ? 0 : itemTotal);
-    }, 0);
-    const discount = items.reduce((total, item) => {
-      const itemTotal = Number(item.price) * Number(item.quantity);
-      const discountAmount = (itemTotal * Number(item.discount || 0) / 100);
-      return total + Math.round(discountAmount / 1000) * 1000;
-    }, 0);
-    const total = subtotal - discount;
-    return isNaN(total) ? 0 : total;
+    return calculateInvoiceTotal(items);
   };
 
   const renderMobileView = () => (
@@ -165,7 +156,7 @@ function InvoiceList() {
                     Tổng tiền:
                   </Typography>
                   <Typography variant="body1" color="primary" fontWeight="bold">
-                    {calculateTotal(invoice.items).toLocaleString('vi-VN')} VNĐ
+                    {formatMoney(calculateTotal(invoice.items))}
                   </Typography>
                 </Grid>
                 <Grid item xs={6}>
@@ -215,7 +206,7 @@ function InvoiceList() {
                 <TableCell>{invoice.customer?.name || '-'}</TableCell>
                 <TableCell>{getInvoiceTypeText(invoice.invoiceType)}</TableCell>
                 <TableCell>{invoice.items.length}</TableCell>
-                <TableCell>{calculateTotal(invoice.items).toLocaleString('vi-VN')} VNĐ</TableCell>
+                <TableCell>{formatMoney(calculateTotal(invoice.items))}</TableCell>
                 <TableCell>
                   <Chip
                     label={getStatusText(invoice.status)}

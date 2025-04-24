@@ -18,6 +18,7 @@ import {
 } from '@mui/material';
 import { ArrowBack as ArrowBackIcon } from '@mui/icons-material';
 import axiosInstance from '../utils/axios';
+import { formatMoney } from '../utils/moneyUtils';
 
 function CustomerDetail() {
   const [customer, setCustomer] = useState(null);
@@ -197,7 +198,7 @@ function CustomerDetail() {
                 <TableRow key={invoice._id}>
                   <TableCell>{getInvoiceTypeText(invoice.invoiceType)}</TableCell>
                   <TableCell>{invoice.items.length}</TableCell>
-                  <TableCell>{invoice.totalAmount.toLocaleString('vi-VN')} VNĐ</TableCell>
+                  <TableCell>{formatMoney(invoice.totalAmount)}</TableCell>
                   <TableCell>
                     <Chip
                       label={getStatusText(invoice.status)}

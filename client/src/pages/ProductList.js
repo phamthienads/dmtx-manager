@@ -22,6 +22,7 @@ import {
 } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
 import axiosInstance from '../utils/axios';
+import { formatMoney } from '../utils/moneyUtils';
 
 function ProductList() {
   const [products, setProducts] = useState([]);
@@ -93,7 +94,7 @@ function ProductList() {
                     Giá nhập:
                   </Typography>
                   <Typography variant="body1">
-                    {product.importPrice ? product.importPrice.toLocaleString('vi-VN') : '0'} VNĐ
+                    {product.importPrice ? formatMoney(product.importPrice) : '0'}
                   </Typography>
                 </Grid>
                 <Grid item xs={6}>
@@ -101,7 +102,7 @@ function ProductList() {
                     Giá bán lẻ:
                   </Typography>
                   <Typography variant="body1">
-                    {product.retailPrice ? product.retailPrice.toLocaleString('vi-VN') : '0'} VNĐ
+                    {product.retailPrice ? formatMoney(product.retailPrice) : '0'}
                   </Typography>
                 </Grid>
                 <Grid item xs={6}>
@@ -109,7 +110,7 @@ function ProductList() {
                     Giá bán sỉ:
                   </Typography>
                   <Typography variant="body1">
-                    {product.wholesalePrice ? product.wholesalePrice.toLocaleString('vi-VN') : '0'} VNĐ
+                    {product.wholesalePrice ? formatMoney(product.wholesalePrice) : '0'}
                   </Typography>
                 </Grid>
                 <Grid item xs={6}>
@@ -125,7 +126,7 @@ function ProductList() {
                     Tổng tiền hàng:
                   </Typography>
                   <Typography variant="body1" color="primary">
-                    {((product.importPrice || 0) * (product.stock || 0)).toLocaleString('vi-VN')} VNĐ
+                    {formatMoney((product.importPrice || 0) * (product.stock || 0))}
                   </Typography>
                 </Grid>
               </Grid>
@@ -156,11 +157,11 @@ function ProductList() {
               <TableRow key={product._id}>
                 <TableCell>{product.name}</TableCell>
                 <TableCell>{product.code || '-'}</TableCell>
-                <TableCell>{product.importPrice ? product.importPrice.toLocaleString('vi-VN') : '0'} VNĐ</TableCell>
-                <TableCell>{product.retailPrice ? product.retailPrice.toLocaleString('vi-VN') : '0'} VNĐ</TableCell>
-                <TableCell>{product.wholesalePrice ? product.wholesalePrice.toLocaleString('vi-VN') : '0'} VNĐ</TableCell>
+                <TableCell>{product.importPrice ? formatMoney(product.importPrice) : '0'}</TableCell>
+                <TableCell>{product.retailPrice ? formatMoney(product.retailPrice) : '0'}</TableCell>
+                <TableCell>{product.wholesalePrice ? formatMoney(product.wholesalePrice) : '0'}</TableCell>
                 <TableCell>{product.stock}</TableCell>
-                <TableCell>{(product.importPrice * product.stock).toLocaleString('vi-VN')} VNĐ</TableCell>
+                <TableCell>{formatMoney(product.importPrice * product.stock)}</TableCell>
                 <TableCell>
                   <IconButton
                     color="primary"

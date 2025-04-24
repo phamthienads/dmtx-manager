@@ -37,6 +37,10 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+const roundMoney = (amount) => {
+  return Math.round(amount / 1000) * 1000;
+};
+
 // Create invoice
 router.post('/', async (req, res) => {
   try {
@@ -60,7 +64,7 @@ router.post('/', async (req, res) => {
     const totalAmount = items.reduce((sum, item) => {
       const itemTotal = item.price * item.quantity;
       const discountAmount = (itemTotal * item.discount) / 100;
-      return sum + (itemTotal - discountAmount);
+      return sum + roundMoney(itemTotal - discountAmount);
     }, 0);
 
     const invoice = new Invoice({
@@ -70,7 +74,8 @@ router.post('/', async (req, res) => {
       totalAmount,
       status: req.body.status || 'pending',
       debtStartDate: req.body.status === 'debt' ? req.body.debtStartDate : null,
-      debtEndDate: req.body.status === 'debt' ? req.body.debtEndDate : null
+      debtEndDate: req.body.status === 'debt' ? req.body.debtEndDate : null,
+      createdAt: req.body.createdAt ? new Date(req.body.createdAt) : new Date()
     });
 
     const newInvoice = await invoice.save();
@@ -90,6 +95,7 @@ router.patch('/:id', async (req, res) => {
     if (req.body.customer) invoice.customer = req.body.customer;
     if (req.body.invoiceType) invoice.invoiceType = req.body.invoiceType;
     if (req.body.status) invoice.status = req.body.status;
+    if (req.body.createdAt) invoice.createdAt = new Date(req.body.createdAt);
 
     // Cập nhật các sản phẩm
     if (req.body.items) {
@@ -104,7 +110,7 @@ router.patch('/:id', async (req, res) => {
       invoice.totalAmount = invoice.items.reduce((sum, item) => {
         const itemTotal = item.price * item.quantity;
         const discountAmount = (itemTotal * item.discount) / 100;
-        return sum + (itemTotal - discountAmount);
+        return sum + roundMoney(itemTotal - discountAmount);
       }, 0);
     }
 
@@ -115,15 +121,7 @@ router.patch('/:id', async (req, res) => {
       invoice.debtEndDate = null;
     }
 
-    // Giữ nguyên Ngày Xuất Hoá Đơn
-    const createdAt = invoice.createdAt;
-
     const updatedInvoice = await invoice.save();
-    
-    // Gán lại Ngày Xuất Hoá Đơn sau khi lưu
-    updatedInvoice.createdAt = createdAt;
-    await updatedInvoice.save();
-
     res.json(updatedInvoice);
   } catch (err) {
     res.status(400).json({ message: err.message });

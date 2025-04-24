@@ -18,6 +18,7 @@ import {
 } from '@mui/material';
 import { ArrowBack as ArrowBackIcon, Edit as EditIcon, Print as PrintIcon } from '@mui/icons-material';
 import axiosInstance from '../utils/axios';
+import { formatMoney, calculateItemTotal } from '../utils/moneyUtils';
 
 function InvoiceDetail() {
   const [invoice, setInvoice] = useState(null);
@@ -180,9 +181,9 @@ function InvoiceDetail() {
                     <td>${index + 1}</td>
                     <td style="text-align: left;">${item.product.name}</td>
                     <td>${item.quantity}</td>
-                    <td>${roundToThousand(item.price).toLocaleString('vi-VN')} đ</td>
+                    <td>${formatMoney(item.price)}</td>
                     <td>${item.discount}%</td>
-                    <td>${roundToThousand((item.price * item.quantity) * (1 - item.discount / 100)).toLocaleString('vi-VN')} đ</td>
+                    <td>${formatMoney(calculateItemTotal(item.price, item.quantity, item.discount))}</td>
                   </tr>
                 `).join('')}
                 ${[...Array(Math.max(0, 10 - invoice.items.length))].map((_, i) => `
@@ -199,7 +200,7 @@ function InvoiceDetail() {
             </table>
 
             <div class="total-row">
-              TỔNG TIỀN THANH TOÁN: ${roundToThousand(invoice.totalAmount).toLocaleString('vi-VN')} đ
+              TỔNG TIỀN THANH TOÁN: ${formatMoney(invoice.totalAmount)}
             </div>
 
             <div class="signature-section">
@@ -258,17 +259,12 @@ function InvoiceDetail() {
     }
   };
 
-  // Hàm làm tròn số tiền xuống đến hàng nghìn
-  const roundToThousand = (amount) => {
-    return Math.floor(amount / 1000) * 1000;
-  };
-
   // Tính giá trị chiết khấu cho một sản phẩm
   const calculateItemDiscount = (item) => {
     const itemTotal = Number(item.price) * Number(item.quantity);
     if (isNaN(itemTotal)) return 0;
     const discountAmount = (itemTotal * Number(item.discount || 0) / 100);
-    return roundToThousand(discountAmount);
+    return calculateItemTotal(discountAmount, 1, 0);
   };
 
   // Tính tổng giá trị chiết khấu
@@ -390,10 +386,10 @@ function InvoiceDetail() {
                 <TableRow key={index}>
                   <TableCell>{item.product.name}</TableCell>
                   <TableCell>{item.quantity}</TableCell>
-                  <TableCell>{roundToThousand(item.price).toLocaleString('vi-VN')} VNĐ</TableCell>
+                  <TableCell>{formatMoney(item.price)}</TableCell>
                   <TableCell>{item.discount}%</TableCell>
                   <TableCell>
-                    {roundToThousand((item.price * item.quantity) * (1 - item.discount / 100)).toLocaleString('vi-VN')} VNĐ
+                    {formatMoney(calculateItemTotal(item.price, item.quantity, item.discount))}
                   </TableCell>
                 </TableRow>
               ))}
@@ -402,7 +398,7 @@ function InvoiceDetail() {
         </TableContainer>
         <Box display="flex" justifyContent="flex-end" mt={3}>
           <Typography variant="h6">
-            Tổng Tiền: {roundToThousand(invoice.totalAmount).toLocaleString('vi-VN')} VNĐ
+            Tổng Tiền: {formatMoney(invoice.totalAmount)}
           </Typography>
         </Box>
       </Paper>
