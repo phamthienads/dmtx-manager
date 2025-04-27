@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -24,7 +24,9 @@ import {
   Select,
   MenuItem,
   InputLabel,
-  TextField
+  TextField,
+  CircularProgress,
+  Alert
 } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
 import axiosInstance from '../utils/axios';
@@ -36,16 +38,16 @@ function ProductList() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(20);
   const [totalProducts, setTotalProducts] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  useEffect(() => {
-    fetchProducts();
-  }, [page, rowsPerPage]);
-
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     try {
+      setLoading(true);
+      setError(null);
       const response = await axiosInstance.get('/api/products', {
         params: {
           page: page + 1,
@@ -53,21 +55,26 @@ function ProductList() {
         }
       });
       
-      // Đảm bảo response.data.products là một mảng
       if (response.data && Array.isArray(response.data.products)) {
         setProducts(response.data.products);
-        setTotalProducts(response.data.pagination.total);
+        setTotalProducts(response.data.total || 0);
       } else {
-        console.error('Invalid products data:', response.data);
         setProducts([]);
         setTotalProducts(0);
       }
     } catch (error) {
       console.error('Error fetching products:', error);
+      setError('Không thể tải danh sách sản phẩm. Vui lòng thử lại sau.');
       setProducts([]);
       setTotalProducts(0);
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [page, rowsPerPage]);
+
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
 
   const handleDelete = async (id) => {
     if (window.confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')) {
@@ -308,7 +315,13 @@ function ProductList() {
           sx={{ mb: 2 }}
         />
       </Box>
-      {isMobile ? (
+      {loading ? (
+        <Box display="flex" justifyContent="center" my={4}>
+          <CircularProgress />
+        </Box>
+      ) : error ? (
+        <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>
+      ) : isMobile ? (
         <>
           {renderMobileView(paginatedProducts)}
           {renderPagination()}

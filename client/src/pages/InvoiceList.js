@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -20,32 +20,33 @@ import {
   useMediaQuery,
   useTheme,
   Divider,
-  TableSortLabel,
   TablePagination,
   FormControl,
   Select,
   MenuItem,
-  InputLabel
+  InputLabel,
+  CircularProgress,
+  Alert
 } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, Visibility as VisibilityIcon } from '@mui/icons-material';
 import axiosInstance from '../utils/axios';
-import { formatMoney, calculateInvoiceTotal } from '../utils/moneyUtils';
+import { formatMoney } from '../utils/moneyUtils';
 
 function InvoiceList() {
   const [invoices, setInvoices] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(20);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [totalInvoices, setTotalInvoices] = useState(0);
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  useEffect(() => {
-    fetchInvoices();
-  }, [page, rowsPerPage]);
-
-  const fetchInvoices = async () => {
+  const fetchInvoices = useCallback(async () => {
     try {
+      setLoading(true);
+      setError(null);
       const response = await axiosInstance.get('/api/invoices', {
         params: {
           page: page + 1,
@@ -53,21 +54,26 @@ function InvoiceList() {
         }
       });
       
-      // Kiểm tra cấu trúc dữ liệu trả về
       if (response.data && Array.isArray(response.data.invoices)) {
         setInvoices(response.data.invoices);
-        setTotalInvoices(response.data.pagination.total);
+        setTotalInvoices(response.data.total || 0);
       } else {
-        console.error('Invalid invoices data:', response.data);
         setInvoices([]);
         setTotalInvoices(0);
       }
     } catch (error) {
       console.error('Error fetching invoices:', error);
+      setError('Không thể tải danh sách hóa đơn. Vui lòng thử lại sau.');
       setInvoices([]);
       setTotalInvoices(0);
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [page, rowsPerPage]);
+
+  useEffect(() => {
+    fetchInvoices();
+  }, [fetchInvoices]);
 
   const handleDelete = async (id) => {
     if (window.confirm('Bạn có chắc chắn muốn xóa hóa đơn này?')) {
@@ -111,15 +117,6 @@ function InvoiceList() {
       default:
         return type;
     }
-  };
-
-  const calculateTotal = (items) => {
-    if (!items || !Array.isArray(items)) return 0;
-    return items.reduce((total, item) => {
-      const itemTotal = item.price * item.quantity;
-      const discount = item.discount || 0;
-      return total + (itemTotal - (itemTotal * discount / 100));
-    }, 0);
   };
 
   const handleChangePage = (event, newPage) => {
@@ -298,9 +295,9 @@ function InvoiceList() {
           label="Hiển thị"
           size="small"
         >
+          <MenuItem value={10}>10</MenuItem>
           <MenuItem value={20}>20</MenuItem>
           <MenuItem value={50}>50</MenuItem>
-          <MenuItem value={100}>100</MenuItem>
         </Select>
       </FormControl>
       <TablePagination
@@ -354,7 +351,13 @@ function InvoiceList() {
         </Button>
       </Box>
       
-      {isMobile ? (
+      {loading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mt: 4 }}>
+          <CircularProgress />
+        </Box>
+      ) : error ? (
+        <Alert severity="error">{error}</Alert>
+      ) : isMobile ? (
         <>
           {renderMobileView(invoices)}
           {renderPagination()}

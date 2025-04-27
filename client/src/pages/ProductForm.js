@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Container,
@@ -8,7 +8,8 @@ import {
   Typography,
   Box,
   Grid,
-  Alert
+  Alert,
+  CircularProgress
 } from '@mui/material';
 import axiosInstance from '../utils/axios';
 
@@ -22,18 +23,15 @@ function ProductForm() {
     stock: ''
   });
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { id } = useParams();
   const isEdit = Boolean(id);
 
-  useEffect(() => {
-    if (isEdit) {
-      fetchProduct();
-    }
-  }, [id]);
-
-  const fetchProduct = async () => {
+  const fetchProduct = useCallback(async () => {
     try {
+      setLoading(true);
+      setError(null);
       const response = await axiosInstance.get(`/api/products/${id}`);
       setFormData({
         ...response.data,
@@ -44,8 +42,17 @@ function ProductForm() {
       });
     } catch (error) {
       console.error('Error fetching product:', error);
+      setError('Không thể tải thông tin sản phẩm. Vui lòng thử lại sau.');
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    if (isEdit) {
+      fetchProduct();
+    }
+  }, [isEdit, fetchProduct]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -61,6 +68,7 @@ function ProductForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      setLoading(true);
       const data = {
         ...formData,
         importPrice: formData.importPrice ? Number(formData.importPrice) : null,
@@ -83,6 +91,8 @@ function ProductForm() {
       } else {
         setError('Có lỗi xảy ra khi lưu sản phẩm. Vui lòng thử lại.');
       }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -108,97 +118,105 @@ function ProductForm() {
           </Alert>
         )}
 
-        <form onSubmit={handleSubmit}>
-          <Grid container spacing={3}>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Tên Sản Phẩm"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                required
-              />
+        {loading ? (
+          <Box display="flex" justifyContent="center" my={4}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          <form onSubmit={handleSubmit}>
+            <Grid container spacing={3}>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Tên Sản Phẩm"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Mã Sản Phẩm"
+                  name="code"
+                  value={formData.code}
+                  onChange={handleChange}
+                  error={error?.includes('Mã sản phẩm')}
+                  helperText={error?.includes('Mã sản phẩm') ? error : ''}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Giá Nhập"
+                  name="importPrice"
+                  type="number"
+                  value={formData.importPrice}
+                  onChange={handleChange}
+                  InputProps={{
+                    endAdornment: 'VNĐ'
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Giá Bán Lẻ"
+                  name="retailPrice"
+                  type="number"
+                  value={formData.retailPrice}
+                  onChange={handleChange}
+                  InputProps={{
+                    endAdornment: 'VNĐ'
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Giá Bán Sỉ"
+                  name="wholesalePrice"
+                  type="number"
+                  value={formData.wholesalePrice}
+                  onChange={handleChange}
+                  InputProps={{
+                    endAdornment: 'VNĐ'
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Tồn Kho"
+                  name="stock"
+                  type="number"
+                  value={formData.stock}
+                  onChange={handleChange}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <Box display="flex" justifyContent="flex-end" gap={2}>
+                  <Button
+                    variant="outlined"
+                    onClick={() => navigate('/products')}
+                    disabled={loading}
+                  >
+                    Hủy
+                  </Button>
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    color="primary"
+                    disabled={loading}
+                  >
+                    {isEdit ? 'Cập Nhật' : 'Thêm Mới'}
+                  </Button>
+                </Box>
+              </Grid>
             </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Mã Sản Phẩm"
-                name="code"
-                value={formData.code}
-                onChange={handleChange}
-                error={error?.includes('Mã sản phẩm')}
-                helperText={error?.includes('Mã sản phẩm') ? error : ''}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Giá Nhập"
-                name="importPrice"
-                type="number"
-                value={formData.importPrice}
-                onChange={handleChange}
-                InputProps={{
-                  endAdornment: 'VNĐ'
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Giá Bán Lẻ"
-                name="retailPrice"
-                type="number"
-                value={formData.retailPrice}
-                onChange={handleChange}
-                InputProps={{
-                  endAdornment: 'VNĐ'
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Giá Bán Sỉ"
-                name="wholesalePrice"
-                type="number"
-                value={formData.wholesalePrice}
-                onChange={handleChange}
-                InputProps={{
-                  endAdornment: 'VNĐ'
-                }}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Tồn Kho"
-                name="stock"
-                type="number"
-                value={formData.stock}
-                onChange={handleChange}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <Box display="flex" justifyContent="flex-end" gap={2}>
-                <Button
-                  variant="outlined"
-                  onClick={() => navigate('/products')}
-                >
-                  Hủy
-                </Button>
-                <Button
-                  type="submit"
-                  variant="contained"
-                  color="primary"
-                >
-                  {isEdit ? 'Cập Nhật' : 'Thêm Mới'}
-                </Button>
-              </Box>
-            </Grid>
-          </Grid>
-        </form>
+          </form>
+        )}
       </Paper>
     </Container>
   );
