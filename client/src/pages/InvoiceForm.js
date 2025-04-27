@@ -79,10 +79,13 @@ function InvoiceForm() {
 
   const fetchProducts = async () => {
     try {
-      const response = await axiosInstance.get('/api/products');
-      if (response.data && Array.isArray(response.data)) {
-        setProducts(response.data);
-      } else if (response.data && response.data.products && Array.isArray(response.data.products)) {
+      const response = await axiosInstance.get('/api/products', {
+        params: {
+          limit: 1000 // Lấy tất cả sản phẩm
+        }
+      });
+      
+      if (response.data && response.data.products && Array.isArray(response.data.products)) {
         setProducts(response.data.products);
       } else {
         console.error('Invalid products data:', response.data);
@@ -102,27 +105,36 @@ function InvoiceForm() {
         return;
       }
       
-      // Kiểm tra cấu trúc dữ liệu
       const invoiceData = response.data;
-      if (!invoiceData.customer || !invoiceData.items) {
-        console.error('Invalid invoice data structure:', invoiceData);
-        return;
-      }
+      
+      // Kiểm tra và xử lý dữ liệu customer
+      const customerId = typeof invoiceData.customer === 'object' 
+        ? invoiceData.customer._id 
+        : invoiceData.customer;
+        
+      // Kiểm tra và xử lý dữ liệu items
+      const items = invoiceData.items.map(item => {
+        const productId = typeof item.product === 'object'
+          ? item.product._id
+          : item.product;
+          
+        return {
+          product: productId,
+          quantity: Number(item.quantity) || 1,
+          price: Number(item.price) || 0,
+          discount: Number(item.discount) || 0
+        };
+      });
       
       setFormData({
-        customer: invoiceData.customer._id,
-        invoiceType: invoiceData.invoiceType,
-        status: invoiceData.status,
-        invoiceCode: invoiceData.invoiceCode,
-        items: invoiceData.items.map(item => ({
-          product: item.product._id,
-          quantity: item.quantity || 1,
-          price: item.price || 0,
-          discount: item.discount || 0
-        })),
+        customer: customerId,
+        invoiceType: invoiceData.invoiceType || 'retail',
+        status: invoiceData.status || 'paid',
+        invoiceCode: invoiceData.invoiceCode || '',
+        items: items.length > 0 ? items : [{ product: '', quantity: 1, price: 0, discount: 0 }],
         debtStartDate: invoiceData.debtStartDate || '',
         debtEndDate: invoiceData.debtEndDate ? new Date(invoiceData.debtEndDate).toISOString().split('T')[0] : '',
-        createdAt: new Date(invoiceData.createdAt).toISOString().split('T')[0]
+        createdAt: invoiceData.createdAt ? new Date(invoiceData.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
       });
     } catch (error) {
       console.error('Error fetching invoice:', error);

@@ -51,13 +51,14 @@ function ProductList() {
       const response = await axiosInstance.get('/api/products', {
         params: {
           page: page + 1,
-          limit: rowsPerPage
+          limit: rowsPerPage,
+          search: searchTerm
         }
       });
       
       if (response.data && Array.isArray(response.data.products)) {
         setProducts(response.data.products);
-        setTotalProducts(response.data.total || 0);
+        setTotalProducts(response.data.pagination.total || 0);
       } else {
         setProducts([]);
         setTotalProducts(0);
@@ -70,7 +71,7 @@ function ProductList() {
     } finally {
       setLoading(false);
     }
-  }, [page, rowsPerPage]);
+  }, [page, rowsPerPage, searchTerm]);
 
   useEffect(() => {
     fetchProducts();
@@ -89,14 +90,8 @@ function ProductList() {
 
   const handleSearch = (event) => {
     setSearchTerm(event.target.value);
+    setPage(0);
   };
-
-  // Đảm bảo products là một mảng trước khi filter
-  const filteredProducts = Array.isArray(products) 
-    ? products.filter(product => 
-        product.name.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    : [];
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -107,10 +102,7 @@ function ProductList() {
     setPage(0);
   };
 
-  const paginatedProducts = filteredProducts.slice(
-    page * rowsPerPage,
-    page * rowsPerPage + rowsPerPage
-  );
+  const paginatedProducts = products;
 
   const renderMobileView = (products) => (
     <Grid container spacing={2}>

@@ -43,13 +43,13 @@ function CustomerList() {
 
   useEffect(() => {
     fetchCustomers();
-  }, [page, rowsPerPage]);
+  }, [page, rowsPerPage, searchTerm]);
 
-  const fetchCustomers = async (search = '') => {
+  const fetchCustomers = async () => {
     try {
       const response = await axiosInstance.get(`/api/customers`, {
         params: {
-          search,
+          search: searchTerm,
           page: page + 1,
           limit: rowsPerPage,
           sort: 'name'
@@ -65,14 +65,14 @@ function CustomerList() {
   const handleSearch = (e) => {
     const value = e.target.value;
     setSearchTerm(value);
-    fetchCustomers(value);
+    setPage(0);
   };
 
   const handleDelete = async (id) => {
     if (window.confirm('Bạn có chắc chắn muốn xóa khách hàng này?')) {
       try {
         await axiosInstance.delete(`/api/customers/${id}`);
-        fetchCustomers(searchTerm);
+        fetchCustomers();
       } catch (error) {
         console.error('Error deleting customer:', error);
       }
