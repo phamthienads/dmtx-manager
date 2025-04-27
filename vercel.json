@@ -27,6 +27,6 @@
     }
   ],
   "env": {
-    "REACT_APP_API_URL": "https://dmtx-manager.vercel.app"
+    "REACT_APP_API_URL": "dmtx-manager.vercel.app"
   }
 }
