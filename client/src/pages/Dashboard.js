@@ -8,12 +8,14 @@ import {
   Card,
   CardContent,
   CardActions,
-  Button
+  Button,
+  Stack
 } from '@mui/material';
 import {
   People as PeopleIcon,
   ShoppingCart as ShoppingCartIcon,
-  Receipt as ReceiptIcon
+  Receipt as ReceiptIcon,
+  Add as AddIcon
 } from '@mui/icons-material';
 import axiosInstance from '../utils/axios';
 
@@ -47,7 +49,7 @@ function Dashboard() {
     }
   };
 
-  const StatCard = ({ title, value, icon, color, onClick }) => (
+  const StatCard = ({ title, value, icon, color, onClick, onCreate }) => (
     <Card sx={{ height: '100%' }}>
       <CardContent>
         <Box display="flex" alignItems="center" mb={2}>
@@ -61,17 +63,46 @@ function Dashboard() {
         </Typography>
       </CardContent>
       <CardActions>
-        <Button size="small" onClick={onClick}>
-          Xem chi tiết
-        </Button>
+        <Stack direction="row" spacing={1} sx={{ width: '100%' }}>
+          <Button 
+            size="small" 
+            onClick={onClick}
+            variant="outlined"
+            sx={{ flex: 1 }}
+          >
+            Xem chi tiết
+          </Button>
+          <Button
+            size="small"
+            onClick={onCreate}
+            variant="contained"
+            startIcon={<AddIcon />}
+            sx={{ flex: 1 }}
+          >
+            Tạo mới
+          </Button>
+        </Stack>
       </CardActions>
     </Card>
   );
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <Typography variant="h4" gutterBottom>
-        Tổng Quan
+      <Typography 
+        variant="h4" 
+        gutterBottom
+        sx={{
+          fontWeight: 600,
+          color: 'primary.main',
+          mb: 4,
+          textAlign: 'center',
+          fontSize: { xs: '1.5rem', sm: '2.125rem' },
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis'
+        }}
+      >
+        Bảng Điều Khiển
       </Typography>
 
       <Grid container spacing={3}>
@@ -82,6 +113,7 @@ function Dashboard() {
             icon={<PeopleIcon color="primary" />}
             color="primary"
             onClick={() => navigate('/customers')}
+            onCreate={() => navigate('/customers/new')}
           />
         </Grid>
         <Grid item xs={12} sm={4}>
@@ -91,6 +123,7 @@ function Dashboard() {
             icon={<ShoppingCartIcon color="secondary" />}
             color="secondary"
             onClick={() => navigate('/products')}
+            onCreate={() => navigate('/products/new')}
           />
         </Grid>
         <Grid item xs={12} sm={4}>
@@ -100,6 +133,7 @@ function Dashboard() {
             icon={<ReceiptIcon color="success" />}
             color="success"
             onClick={() => navigate('/invoices')}
+            onCreate={() => navigate('/invoices/new')}
           />
         </Grid>
       </Grid>

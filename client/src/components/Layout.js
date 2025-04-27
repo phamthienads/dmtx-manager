@@ -1,6 +1,8 @@
 import React from 'react';
 import { Container, Box } from '@mui/material';
 import Navbar from './Navbar';
+import Footer from './Footer';
+import Sidebar from './Sidebar';
 
 function Layout({ children }) {
   return (
@@ -12,19 +14,27 @@ function Layout({ children }) {
       overflowX: 'hidden'
     }}>
       <Navbar />
-      <Container 
-        component="main" 
-        sx={{ 
-          mt: { xs: 2, sm: 4 }, 
-          mb: { xs: 2, sm: 4 }, 
-          flex: 1,
-          width: '100%',
-          maxWidth: { xs: '100%', sm: '100%', md: '1200px' },
-          px: { xs: 1, sm: 2, md: 3 }
-        }}
-      >
-        {children}
-      </Container>
+      <Box sx={{ display: 'flex', flex: 1 }}>
+        <Sidebar />
+        <Box
+          component="main"
+          sx={{
+            flexGrow: 1,
+            p: { xs: 2, sm: 3 },
+            width: { md: `calc(100% - 240px)` },
+            display: 'flex',
+            justifyContent: 'center'
+          }}
+        >
+          <Box sx={{ 
+            width: '100%',
+            maxWidth: { xs: '100%', sm: '100%', md: '1200px' }
+          }}>
+            {children}
+          </Box>
+        </Box>
+      </Box>
+      <Footer />
     </Box>
   );
 }

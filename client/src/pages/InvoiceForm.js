@@ -26,7 +26,8 @@ import {
   Divider,
   Stepper,
   Step,
-  StepLabel
+  StepLabel,
+  Autocomplete
 } from '@mui/material';
 import { Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
 import axiosInstance from '../utils/axios';
@@ -319,21 +320,29 @@ function InvoiceForm() {
             />
           </Grid>
           <Grid item xs={12} sm={6}>
-            <FormControl fullWidth>
-              <InputLabel>Khách hàng</InputLabel>
-              <Select
-                name="customer"
-                value={formData.customer}
-                onChange={handleChange}
-                label="Khách hàng"
-              >
-                {customers.map((customer) => (
-                  <MenuItem key={customer._id} value={customer._id}>
-                    {customer.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+            <Autocomplete
+              value={customers.find(c => c._id === formData.customer) || null}
+              onChange={(event, newValue) => {
+                const customerId = newValue?._id || '';
+                setFormData(prev => ({
+                  ...prev,
+                  customer: customerId,
+                  invoiceType: newValue?.customerType || 'retail'
+                }));
+              }}
+              options={customers}
+              getOptionLabel={(option) => option.name || ''}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Chọn khách hàng"
+                  variant="outlined"
+                  required
+                />
+              )}
+              isOptionEqualToValue={(option, value) => option._id === value._id}
+              noOptionsText="Không tìm thấy khách hàng"
+            />
           </Grid>
           <Grid item xs={12} sm={6}>
             <FormControl fullWidth>
@@ -398,20 +407,25 @@ function InvoiceForm() {
                     </Box>
                     <Grid container spacing={2}>
                       <Grid item xs={12}>
-                        <FormControl fullWidth>
-                          <InputLabel>Sản phẩm</InputLabel>
-                          <Select
-                            value={item.product}
-                            onChange={(e) => handleItemChange(index, 'product', e.target.value)}
-                            label="Sản phẩm"
-                          >
-                            {products.map((product) => (
-                              <MenuItem key={product._id} value={product._id}>
-                                {product.name}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
+                        <Autocomplete
+                          value={products.find(p => p._id === item.product) || null}
+                          onChange={(event, newValue) => {
+                            handleItemChange(index, 'product', newValue?._id || '');
+                          }}
+                          options={products}
+                          getOptionLabel={(option) => option.name || ''}
+                          renderInput={(params) => (
+                            <TextField
+                              {...params}
+                              label="Chọn sản phẩm"
+                              variant="outlined"
+                              size="small"
+                              fullWidth
+                            />
+                          )}
+                          isOptionEqualToValue={(option, value) => option._id === value._id}
+                          noOptionsText="Không tìm thấy sản phẩm"
+                        />
                       </Grid>
                       <Grid item xs={6}>
                         <TextField
@@ -420,6 +434,7 @@ function InvoiceForm() {
                           type="number"
                           value={item.quantity}
                           onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
+                          size="small"
                         />
                       </Grid>
                       <Grid item xs={6}>
@@ -429,6 +444,7 @@ function InvoiceForm() {
                           type="number"
                           value={item.price}
                           onChange={(e) => handleItemChange(index, 'price', e.target.value)}
+                          size="small"
                         />
                       </Grid>
                       <Grid item xs={12}>
@@ -438,7 +454,13 @@ function InvoiceForm() {
                           type="number"
                           value={item.discount}
                           onChange={(e) => handleItemChange(index, 'discount', e.target.value)}
+                          size="small"
                         />
+                      </Grid>
+                      <Grid item xs={12}>
+                        <Typography variant="body2" color="text.secondary">
+                          Thành tiền: {formatMoney(calculateItemTotal(item))}
+                        </Typography>
                       </Grid>
                     </Grid>
                   </CardContent>
@@ -452,59 +474,68 @@ function InvoiceForm() {
               <TableHead>
                 <TableRow>
                   <TableCell>Sản phẩm</TableCell>
-                  <TableCell>Số lượng</TableCell>
-                  <TableCell>Giá</TableCell>
-                  <TableCell>Chiết khấu (%)</TableCell>
-                  <TableCell>Thành tiền</TableCell>
-                  <TableCell>Thao tác</TableCell>
+                  <TableCell align="right">Số lượng</TableCell>
+                  <TableCell align="right">Đơn giá</TableCell>
+                  <TableCell align="right">Chiết khấu (%)</TableCell>
+                  <TableCell align="right">Thành tiền</TableCell>
+                  <TableCell align="right">Thao tác</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {formData.items.map((item, index) => (
                   <TableRow key={index}>
                     <TableCell>
-                      <FormControl fullWidth>
-                        <Select
-                          value={item.product}
-                          onChange={(e) => handleItemChange(index, 'product', e.target.value)}
-                        >
-                          {products.map((product) => (
-                            <MenuItem key={product._id} value={product._id}>
-                              {product.name}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
+                      <Autocomplete
+                        value={products.find(p => p._id === item.product) || null}
+                        onChange={(event, newValue) => {
+                          handleItemChange(index, 'product', newValue?._id || '');
+                        }}
+                        options={products}
+                        getOptionLabel={(option) => option.name || ''}
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            label="Chọn sản phẩm"
+                            variant="outlined"
+                            size="small"
+                          />
+                        )}
+                        isOptionEqualToValue={(option, value) => option._id === value._id}
+                        noOptionsText="Không tìm thấy sản phẩm"
+                      />
                     </TableCell>
-                    <TableCell>
+                    <TableCell align="right">
                       <TextField
                         type="number"
                         value={item.quantity}
                         onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
+                        size="small"
+                        sx={{ width: '80px' }}
                       />
                     </TableCell>
-                    <TableCell>
+                    <TableCell align="right">
                       <TextField
                         type="number"
                         value={item.price}
                         onChange={(e) => handleItemChange(index, 'price', e.target.value)}
+                        size="small"
+                        sx={{ width: '120px' }}
                       />
                     </TableCell>
-                    <TableCell>
+                    <TableCell align="right">
                       <TextField
                         type="number"
                         value={item.discount}
                         onChange={(e) => handleItemChange(index, 'discount', e.target.value)}
+                        size="small"
+                        sx={{ width: '80px' }}
                       />
                     </TableCell>
-                    <TableCell>
-                      {formatMoney(calculateItemTotal(item.price, item.quantity, item.discount))}
+                    <TableCell align="right">
+                      {formatMoney(calculateItemTotal(item))}
                     </TableCell>
-                    <TableCell>
-                      <IconButton
-                        color="error"
-                        onClick={() => removeItem(index)}
-                      >
+                    <TableCell align="right">
+                      <IconButton onClick={() => removeItem(index)} color="error">
                         <DeleteIcon />
                       </IconButton>
                     </TableCell>
@@ -698,7 +729,7 @@ function InvoiceForm() {
                 }
               }}
             >
-              Danh sách sản phẩm
+              sản phẩm
             </StepLabel>
             {renderItemsList()}
           </Step>

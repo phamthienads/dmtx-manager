@@ -23,7 +23,7 @@ function CustomerForm() {
     phone: '',
     address: '',
     taxCode: '',
-    customerType: 'retail'
+    customerType: 'wholesale'
   });
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -75,9 +75,18 @@ function CustomerForm() {
   return (
     <Container maxWidth="md" sx={{ mt: 4 }}>
       <Paper sx={{ p: 3 }}>
-        <Typography variant="h5" gutterBottom>
-          {isEdit ? 'Sửa Khách Hàng' : 'Thêm Khách Hàng Mới'}
-        </Typography>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+          <Typography 
+            variant="h4"
+            sx={{
+              fontWeight: 600,
+              color: 'primary.main',
+              textAlign: 'center'
+            }}
+          >
+            {isEdit ? 'Cập Nhật Hồ Sơ Khách Hàng' : 'Tạo Hồ Sơ Khách Hàng'}
+          </Typography>
+        </Box>
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}
@@ -112,12 +121,11 @@ function CustomerForm() {
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="Email (Không bắt buộc)"
+                label="Email"
                 name="email"
                 type="email"
                 value={formData.email}
                 onChange={handleChange}
-                helperText="Có thể để trống"
               />
             </Grid>
             <Grid item xs={12}>
@@ -143,11 +151,10 @@ function CustomerForm() {
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="Mã Số Thuế (Không bắt buộc)"
+                label="Mã Số Thuế"
                 name="taxCode"
                 value={formData.taxCode}
                 onChange={handleChange}
-                helperText="Có thể để trống"
               />
             </Grid>
             <Grid item xs={12}>

@@ -89,9 +89,18 @@ function ProductForm() {
   return (
     <Container maxWidth="md" sx={{ mt: 4 }}>
       <Paper sx={{ p: 3 }}>
-        <Typography variant="h5" gutterBottom>
-          {isEdit ? 'Sửa Sản Phẩm' : 'Thêm Sản Phẩm Mới'}
-        </Typography>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+          <Typography 
+            variant="h4"
+            sx={{
+              fontWeight: 600,
+              color: 'primary.main',
+              textAlign: 'center'
+            }}
+          >
+            {isEdit ? 'Cập Nhật Sản Phẩm' : 'Tạo Sản Phẩm Mới'}
+          </Typography>
+        </Box>
 
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>

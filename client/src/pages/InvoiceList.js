@@ -20,7 +20,12 @@ import {
   useMediaQuery,
   useTheme,
   Divider,
-  TableSortLabel
+  TableSortLabel,
+  TablePagination,
+  FormControl,
+  Select,
+  MenuItem,
+  InputLabel
 } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, Visibility as VisibilityIcon } from '@mui/icons-material';
 import axiosInstance from '../utils/axios';
@@ -28,6 +33,8 @@ import { formatMoney, calculateInvoiceTotal } from '../utils/moneyUtils';
 
 function InvoiceList() {
   const [invoices, setInvoices] = useState([]);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(20);
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -98,7 +105,21 @@ function InvoiceList() {
     return calculateInvoiceTotal(items);
   };
 
-  const renderMobileView = () => (
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  const paginatedInvoices = invoices.slice(
+    page * rowsPerPage,
+    page * rowsPerPage + rowsPerPage
+  );
+
+  const renderMobileView = (invoices) => (
     <Box>
       {invoices.map((invoice) => (
         <Card key={invoice._id} sx={{ mb: 2 }}>
@@ -154,7 +175,7 @@ function InvoiceList() {
     </Box>
   );
 
-  const renderDesktopView = () => (
+  const renderDesktopView = (invoices) => (
     <TableContainer component={Paper}>
       <Table>
         <TableHead>
@@ -210,20 +231,82 @@ function InvoiceList() {
     </TableContainer>
   );
 
+  const renderPagination = () => (
+    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
+      <FormControl sx={{ minWidth: 120 }}>
+        <InputLabel>Hiển thị</InputLabel>
+        <Select
+          value={rowsPerPage}
+          onChange={handleChangeRowsPerPage}
+          label="Hiển thị"
+          size="small"
+        >
+          <MenuItem value={20}>20</MenuItem>
+          <MenuItem value={50}>50</MenuItem>
+          <MenuItem value={100}>100</MenuItem>
+        </Select>
+      </FormControl>
+      <TablePagination
+        component="div"
+        count={invoices.length}
+        page={page}
+        onPageChange={handleChangePage}
+        rowsPerPage={rowsPerPage}
+        rowsPerPageOptions={[]}
+        labelDisplayedRows={({ from, to, count }) => `${from}-${to} của ${count}`}
+      />
+    </Box>
+  );
+
   return (
     <Container maxWidth="lg" sx={{ mt: 4 }}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4">Danh Sách Hóa Đơn</Typography>
+      <Box 
+        display="flex" 
+        flexDirection={{ xs: 'column', sm: 'row' }}
+        justifyContent="space-between" 
+        alignItems={{ xs: 'stretch', sm: 'center' }} 
+        mb={3}
+        gap={2}
+      >
+        <Typography 
+          variant="h4"
+          sx={{
+            fontWeight: 600,
+            color: 'primary.main',
+            textAlign: 'center',
+            fontSize: { xs: '1.5rem', sm: '2.125rem' },
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis'
+          }}
+        >
+          Quản Lý Hóa Đơn
+        </Typography>
         <Button
           variant="contained"
           color="primary"
           startIcon={<AddIcon />}
           onClick={() => navigate('/invoices/new')}
+          sx={{ 
+            width: { xs: '100%', sm: 'auto' },
+            minWidth: { xs: '100%', sm: '200px' }
+          }}
         >
           Tạo Hóa Đơn Mới
         </Button>
       </Box>
-      {isMobile ? renderMobileView() : renderDesktopView()}
+
+      {isMobile ? (
+        <>
+          {renderMobileView(paginatedInvoices)}
+          {renderPagination()}
+        </>
+      ) : (
+        <>
+          {renderDesktopView(paginatedInvoices)}
+          {renderPagination()}
+        </>
+      )}
     </Container>
   );
 }

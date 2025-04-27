@@ -120,8 +120,16 @@ function CustomerDetail() {
       </Button>
 
       <Paper sx={{ p: 3, mb: 4 }}>
-        <Typography variant="h5" gutterBottom>
-          Thông Tin Khách Hàng
+        <Typography 
+          variant="h5" 
+          gutterBottom
+          sx={{
+            fontWeight: 600,
+            color: 'primary.main',
+            mb: 3
+          }}
+        >
+          Hồ Sơ Khách Hàng
         </Typography>
         <Grid container spacing={3}>
           <Grid item xs={12} sm={6}>

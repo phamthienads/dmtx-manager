@@ -332,8 +332,16 @@ function InvoiceDetail() {
       </Box>
 
       <Paper sx={{ p: 3, mb: 4 }}>
-        <Typography variant="h5" gutterBottom>
-          Thông Tin Hóa Đơn
+        <Typography 
+          variant="h5" 
+          gutterBottom
+          sx={{
+            fontWeight: 600,
+            color: 'primary.main',
+            mb: 3
+          }}
+        >
+          Thông Tin Chi Tiết
         </Typography>
         <Grid container spacing={3}>
           <Grid item xs={12} sm={6}>
@@ -386,8 +394,16 @@ function InvoiceDetail() {
       </Paper>
 
       <Paper sx={{ p: 3 }}>
-        <Typography variant="h5" gutterBottom>
-          Chi Tiết Sản Phẩm
+        <Typography 
+          variant="h5" 
+          gutterBottom
+          sx={{
+            fontWeight: 600,
+            color: 'primary.main',
+            mb: 3
+          }}
+        >
+          Danh Sách Sản Phẩm
         </Typography>
         <TableContainer>
           <Table>

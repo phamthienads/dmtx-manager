@@ -16,6 +16,18 @@ import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 
 const theme = createTheme({
+  typography: {
+    fontFamily: [
+      'Lexend',
+      '-apple-system',
+      'BlinkMacSystemFont',
+      '"Segoe UI"',
+      'Roboto',
+      '"Helvetica Neue"',
+      'Arial',
+      'sans-serif',
+    ].join(','),
+  },
   palette: {
     primary: {
       main: '#1976d2',
@@ -39,7 +51,18 @@ const theme = createTheme({
         root: {
           padding: '16px',
           '@media (max-width:600px)': {
-            padding: '8px',
+            padding: '0px',
+          },
+        },
+      },
+    },
+    MuiAppBar: {
+      styleOverrides: {
+        root: {
+          boxShadow: 'none',
+          borderBottom: '1px solid rgba(0, 0, 0, 0.12)',
+          '@media (max-width:600px)': {
+            margin: '0',
           },
         },
       },

@@ -21,7 +21,12 @@ import {
   Grid,
   useMediaQuery,
   useTheme,
-  Divider
+  Divider,
+  TablePagination,
+  FormControl,
+  Select,
+  MenuItem,
+  InputLabel
 } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, Visibility as VisibilityIcon, Search as SearchIcon } from '@mui/icons-material';
 import axiosInstance from '../utils/axios';
@@ -29,6 +34,8 @@ import axiosInstance from '../utils/axios';
 function CustomerList() {
   const [customers, setCustomers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(20);
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -219,13 +226,37 @@ function CustomerList() {
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4 }}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4">Danh Sách Khách Hàng</Typography>
+      <Box 
+        display="flex" 
+        flexDirection={{ xs: 'column', sm: 'row' }}
+        justifyContent="space-between" 
+        alignItems={{ xs: 'stretch', sm: 'center' }} 
+        mb={3}
+        gap={2}
+      >
+        <Typography 
+          variant="h4"
+          sx={{
+            fontWeight: 600,
+            color: 'primary.main',
+            textAlign: 'center',
+            fontSize: { xs: '1.5rem', sm: '2.125rem' },
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis'
+          }}
+        >
+          Quản Lý Khách Hàng
+        </Typography>
         <Button
           variant="contained"
           color="primary"
           startIcon={<AddIcon />}
           onClick={() => navigate('/customers/new')}
+          sx={{ 
+            width: { xs: '100%', sm: 'auto' },
+            minWidth: { xs: '100%', sm: '200px' }
+          }}
         >
           Thêm Khách Hàng
         </Button>

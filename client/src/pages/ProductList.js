@@ -19,6 +19,11 @@ import {
   useMediaQuery,
   useTheme,
   Divider,
+  TablePagination,
+  FormControl,
+  Select,
+  MenuItem,
+  InputLabel,
   TextField
 } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
@@ -28,6 +33,8 @@ import { formatMoney } from '../utils/moneyUtils';
 function ProductList() {
   const [products, setProducts] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(20);
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -65,9 +72,23 @@ function ProductList() {
     product.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const renderMobileView = () => (
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  const paginatedProducts = filteredProducts.slice(
+    page * rowsPerPage,
+    page * rowsPerPage + rowsPerPage
+  );
+
+  const renderMobileView = (products) => (
     <Grid container spacing={2}>
-      {filteredProducts.map((product) => (
+      {products.map((product) => (
         <Grid item xs={12} key={product._id}>
           <Card>
             <CardContent>
@@ -82,7 +103,7 @@ function ProductList() {
                 </Box>
                 <Box>
                   <IconButton
-          color="primary"
+                    color="primary"
                     onClick={() => navigate(`/products/edit/${product._id}`)}
                     size="small"
                   >
@@ -96,7 +117,7 @@ function ProductList() {
                     <DeleteIcon />
                   </IconButton>
                 </Box>
-      </Box>
+              </Box>
               <Divider sx={{ my: 1 }} />
               <Grid container spacing={1}>
                 <Grid item xs={6}>
@@ -147,61 +168,112 @@ function ProductList() {
     </Grid>
   );
 
-  const renderDesktopView = () => (
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Tên Sản Phẩm</TableCell>
-              <TableCell>Mã Sản Phẩm</TableCell>
-              <TableCell>Giá Nhập</TableCell>
-              <TableCell>Giá Bán Lẻ</TableCell>
-              <TableCell>Giá Bán Sỉ</TableCell>
-              <TableCell>Tồn Kho</TableCell>
-              <TableCell>Tổng Tiền Hàng</TableCell>
-              <TableCell>Thao Tác</TableCell>
+  const renderDesktopView = (products) => (
+    <TableContainer component={Paper}>
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableCell>Tên Sản Phẩm</TableCell>
+            <TableCell>Mã Sản Phẩm</TableCell>
+            <TableCell>Giá Nhập</TableCell>
+            <TableCell>Giá Bán Lẻ</TableCell>
+            <TableCell>Giá Bán Sỉ</TableCell>
+            <TableCell>Tồn Kho</TableCell>
+            <TableCell>Tổng Tiền Hàng</TableCell>
+            <TableCell>Thao Tác</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {products.map((product) => (
+            <TableRow key={product._id}>
+              <TableCell>{product.name}</TableCell>
+              <TableCell>{product.code || '-'}</TableCell>
+              <TableCell>{product.importPrice ? formatMoney(product.importPrice) : '0'}</TableCell>
+              <TableCell>{product.retailPrice ? formatMoney(product.retailPrice) : '0'}</TableCell>
+              <TableCell>{product.wholesalePrice ? formatMoney(product.wholesalePrice) : '0'}</TableCell>
+              <TableCell>{product.stock}</TableCell>
+              <TableCell>{formatMoney(product.importPrice * product.stock)}</TableCell>
+              <TableCell>
+                <IconButton
+                  color="primary"
+                  onClick={() => navigate(`/products/edit/${product._id}`)}
+                >
+                  <EditIcon />
+                </IconButton>
+                <IconButton
+                  color="error"
+                  onClick={() => handleDelete(product._id)}
+                >
+                  <DeleteIcon />
+                </IconButton>
+              </TableCell>
             </TableRow>
-          </TableHead>
-          <TableBody>
-            {filteredProducts.map((product) => (
-              <TableRow key={product._id}>
-                <TableCell>{product.name}</TableCell>
-                <TableCell>{product.code || '-'}</TableCell>
-                <TableCell>{product.importPrice ? formatMoney(product.importPrice) : '0'}</TableCell>
-                <TableCell>{product.retailPrice ? formatMoney(product.retailPrice) : '0'}</TableCell>
-                <TableCell>{product.wholesalePrice ? formatMoney(product.wholesalePrice) : '0'}</TableCell>
-                <TableCell>{product.stock}</TableCell>
-                <TableCell>{formatMoney(product.importPrice * product.stock)}</TableCell>
-                <TableCell>
-                  <IconButton
-                    color="primary"
-                    onClick={() => navigate(`/products/edit/${product._id}`)}
-                  >
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton
-                    color="error"
-                    onClick={() => handleDelete(product._id)}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
+  );
+
+  const renderPagination = () => (
+    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
+      <FormControl sx={{ minWidth: 120 }}>
+        <InputLabel>Hiển thị</InputLabel>
+        <Select
+          value={rowsPerPage}
+          onChange={handleChangeRowsPerPage}
+          label="Hiển thị"
+          size="small"
+        >
+          <MenuItem value={20}>20</MenuItem>
+          <MenuItem value={50}>50</MenuItem>
+          <MenuItem value={100}>100</MenuItem>
+        </Select>
+      </FormControl>
+      <TablePagination
+        component="div"
+        count={filteredProducts.length}
+        page={page}
+        onPageChange={handleChangePage}
+        rowsPerPage={rowsPerPage}
+        rowsPerPageOptions={[]}
+        labelDisplayedRows={({ from, to, count }) => `${from}-${to} của ${count}`}
+      />
+    </Box>
   );
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4 }}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4">Danh Sách Sản Phẩm</Typography>
+      <Box 
+        display="flex" 
+        flexDirection={{ xs: 'column', sm: 'row' }}
+        justifyContent="space-between" 
+        alignItems={{ xs: 'stretch', sm: 'center' }} 
+        mb={3}
+        gap={2}
+      >
+        <Typography 
+          variant="h4"
+          sx={{
+            fontWeight: 600,
+            color: 'primary.main',
+            textAlign: 'center',
+            fontSize: { xs: '1.5rem', sm: '2.125rem' },
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis'
+          }}
+        >
+          Quản Lý Sản Phẩm
+        </Typography>
         <Button
           variant="contained"
           color="primary"
           startIcon={<AddIcon />}
           onClick={() => navigate('/products/new')}
+          sx={{ 
+            width: { xs: '100%', sm: 'auto' },
+            minWidth: { xs: '100%', sm: '200px' }
+          }}
         >
           Thêm Sản Phẩm
         </Button>
@@ -216,7 +288,17 @@ function ProductList() {
           sx={{ mb: 2 }}
         />
       </Box>
-      {isMobile ? renderMobileView() : renderDesktopView()}
+      {isMobile ? (
+        <>
+          {renderMobileView(paginatedProducts)}
+          {renderPagination()}
+        </>
+      ) : (
+        <>
+          {renderDesktopView(paginatedProducts)}
+          {renderPagination()}
+        </>
+      )}
     </Container>
   );
 }
