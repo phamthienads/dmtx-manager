@@ -73,9 +73,9 @@ function CustomerList() {
   const getCustomerTypeText = (type) => {
     switch (type) {
       case 'retail':
-        return 'Lẻ';
+        return 'Khách Lẻ';
       case 'wholesale':
-        return 'Sỉ';
+        return 'Khách Sỉ';
       default:
         return type;
     }
@@ -100,7 +100,17 @@ function CustomerList() {
             <CardContent>
               <Box display="flex" justifyContent="space-between" alignItems="flex-start">
                 <Box>
-                  <Typography variant="h6" gutterBottom>
+                  <Typography 
+                    variant="h6" 
+                    gutterBottom
+                    sx={{ 
+                      cursor: 'pointer',
+                      '&:hover': {
+                        color: 'primary.main'
+                      }
+                    }}
+                    onClick={() => navigate(`/customers/${customer._id}`)}
+                  >
                     {customer.name}
                   </Typography>
                   <Chip
@@ -186,7 +196,19 @@ function CustomerList() {
         <TableBody>
           {customers.map((customer) => (
             <TableRow key={customer._id}>
-              <TableCell>{customer.name}</TableCell>
+              <TableCell>
+                <Typography
+                  sx={{ 
+                    cursor: 'pointer',
+                    '&:hover': {
+                      color: 'primary.main'
+                    }
+                  }}
+                  onClick={() => navigate(`/customers/${customer._id}`)}
+                >
+                  {customer.name}
+                </Typography>
+              </TableCell>
               <TableCell>
                 <Chip
                   label={getCustomerTypeText(customer.customerType)}

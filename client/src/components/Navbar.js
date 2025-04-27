@@ -47,16 +47,26 @@ function Navbar() {
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          backgroundColor: theme.palette.primary.main,
-          color: 'white',
+          backgroundColor: '#FFFFFF',
+          color: '#333333',
+          borderBottom: '1px solid rgba(0,0,0,0.1)'
         }}
       >
-        <StoreIcon sx={{ fontSize: 40, mb: 1 }} />
+        <img 
+          src="/logo.png" 
+          alt="Logo" 
+          style={{ 
+            width: '80px', 
+            height: '80px', 
+            marginBottom: '10px',
+            objectFit: 'contain'
+          }} 
+        />
         <Typography variant="h6" sx={{ textAlign: 'center' }}>
           Điện Máy Thiên Xuân
         </Typography>
         <Typography variant="body2" sx={{ textAlign: 'center', opacity: 0.8 }}>
-          Quản lý bán hàng
+          Quản Lí Doanh Nghiệp
         </Typography>
       </Box>
       <Divider />
@@ -80,7 +90,14 @@ function Navbar() {
   );
 
   return (
-    <AppBar position="static">
+    <AppBar 
+      position="static"
+      sx={{
+        backgroundColor: '#FFFFFF',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+        color: '#333333'
+      }}
+    >
       <Toolbar>
         {isMobile ? (
           <>
@@ -93,21 +110,28 @@ function Navbar() {
             >
               <MenuIcon />
             </IconButton>
-            <Typography 
-              variant="h6" 
-              component="div" 
-              sx={{ 
+            <Box
+              sx={{
                 position: 'absolute',
                 left: '50%',
                 transform: 'translateX(-50%)',
-                cursor: 'pointer',
-                fontSize: { xs: '1.25rem', sm: '1.5rem' },
-                fontWeight: 700
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                cursor: 'pointer'
               }}
               onClick={() => navigate('/')}
             >
-              Điện Máy Thiên Xuân
-            </Typography>
+              <img 
+                src="/logo.png" 
+                alt="Logo" 
+                style={{ 
+                  width: '45px', 
+                  height: '45px',
+                  objectFit: 'contain'
+                }} 
+              />
+            </Box>
             <Box sx={{ flexGrow: 1 }} />
             <IconButton
               color="inherit"
@@ -121,18 +145,35 @@ function Navbar() {
           </>
         ) : (
           <>
-            <Typography 
-              variant="h6" 
-              component="div" 
-              sx={{ 
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
                 cursor: 'pointer',
-                fontSize: '1.25rem',
                 ml: 2
               }}
               onClick={() => navigate('/')}
             >
-              Điện Máy Thiên Xuân
-            </Typography>
+              <img 
+                src="/logo.png" 
+                alt="Logo" 
+                style={{ 
+                  width: '50px', 
+                  height: '50px',
+                  objectFit: 'contain'
+                }} 
+              />
+              <Typography 
+                variant="h6" 
+                component="div" 
+                sx={{ 
+                  fontSize: '1.25rem'
+                }}
+              >
+                Điện Máy Thiên Xuân
+              </Typography>
+            </Box>
             <Box sx={{ flexGrow: 1 }} />
             <Link
               href="https://dienmaythienxuan.vn"

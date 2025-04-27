@@ -125,7 +125,7 @@ function ProductList() {
                     Giá nhập:
                   </Typography>
                   <Typography variant="body1">
-                    {product.importPrice ? formatMoney(product.importPrice) : '0'}
+                    {product.importPrice ? formatMoney(product.importPrice) : '-'}
                   </Typography>
                 </Grid>
                 <Grid item xs={6}>
@@ -133,7 +133,7 @@ function ProductList() {
                     Giá bán lẻ:
                   </Typography>
                   <Typography variant="body1">
-                    {product.retailPrice ? formatMoney(product.retailPrice) : '0'}
+                    {product.retailPrice ? formatMoney(product.retailPrice) : '-'}
                   </Typography>
                 </Grid>
                 <Grid item xs={6}>
@@ -141,7 +141,7 @@ function ProductList() {
                     Giá bán sỉ:
                   </Typography>
                   <Typography variant="body1">
-                    {product.wholesalePrice ? formatMoney(product.wholesalePrice) : '0'}
+                    {product.wholesalePrice ? formatMoney(product.wholesalePrice) : '-'}
                   </Typography>
                 </Grid>
                 <Grid item xs={6}>
@@ -149,7 +149,7 @@ function ProductList() {
                     Tồn kho:
                   </Typography>
                   <Typography variant="body1">
-                    {product.stock || 0}
+                    {product.stock || '-'}
                   </Typography>
                 </Grid>
                 <Grid item xs={12}>
@@ -188,10 +188,10 @@ function ProductList() {
             <TableRow key={product._id}>
               <TableCell>{product.name}</TableCell>
               <TableCell>{product.code || '-'}</TableCell>
-              <TableCell>{product.importPrice ? formatMoney(product.importPrice) : '0'}</TableCell>
-              <TableCell>{product.retailPrice ? formatMoney(product.retailPrice) : '0'}</TableCell>
-              <TableCell>{product.wholesalePrice ? formatMoney(product.wholesalePrice) : '0'}</TableCell>
-              <TableCell>{product.stock}</TableCell>
+              <TableCell>{product.importPrice ? formatMoney(product.importPrice) : '-'}</TableCell>
+              <TableCell>{product.retailPrice ? formatMoney(product.retailPrice) : '-'}</TableCell>
+              <TableCell>{product.wholesalePrice ? formatMoney(product.wholesalePrice) : '-'}</TableCell>
+              <TableCell>{product.stock || '-'}</TableCell>
               <TableCell>{formatMoney(product.importPrice * product.stock)}</TableCell>
               <TableCell>
                 <IconButton

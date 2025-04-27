@@ -14,7 +14,11 @@ import {
   TableRow,
   Chip,
   Button,
-  Divider
+  Divider,
+  Card,
+  CardContent,
+  useMediaQuery,
+  useTheme
 } from '@mui/material';
 import { ArrowBack as ArrowBackIcon } from '@mui/icons-material';
 import axiosInstance from '../utils/axios';
@@ -25,6 +29,8 @@ function CustomerDetail() {
   const [invoices, setInvoices] = useState([]);
   const { id } = useParams();
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   useEffect(() => {
     fetchCustomer();
@@ -86,9 +92,9 @@ function CustomerDetail() {
   const getCustomerTypeText = (type) => {
     switch (type) {
       case 'retail':
-        return 'Khách Hàng Lẻ';
+        return 'Khách Lẻ';
       case 'wholesale':
-        return 'Khách Hàng Sỉ';
+        return 'Khách Sỉ';
       default:
         return type;
     }
@@ -104,6 +110,99 @@ function CustomerDetail() {
         return 'default';
     }
   };
+
+  const renderMobileInvoiceView = () => (
+    <Box>
+      {invoices.map((invoice) => (
+        <Card key={invoice._id} sx={{ mb: 2 }}>
+          <CardContent>
+            <Box display="flex" justifyContent="space-between" alignItems="center">
+              <Typography variant="subtitle1" fontWeight="bold">
+                {getInvoiceTypeText(invoice.invoiceType)}
+              </Typography>
+              <Chip
+                label={getStatusText(invoice.status)}
+                color={getStatusColor(invoice.status)}
+                size="small"
+              />
+            </Box>
+            <Typography variant="body2" color="text.secondary">
+              Tổng tiền: {formatMoney(invoice.totalAmount)}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Ngày: {new Date(invoice.createdAt).toLocaleDateString('vi-VN')}
+            </Typography>
+            <Box mt={1}>
+              <Button
+                size="small"
+                onClick={() => navigate(`/invoices/${invoice._id}`)}
+                variant="outlined"
+                fullWidth
+              >
+                Xem Chi Tiết
+              </Button>
+            </Box>
+          </CardContent>
+        </Card>
+      ))}
+      {invoices.length === 0 && (
+        <Typography align="center" color="text.secondary">
+          Không có hóa đơn nào
+        </Typography>
+      )}
+    </Box>
+  );
+
+  const renderDesktopInvoiceView = () => (
+    <TableContainer>
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableCell>Loại Hóa Đơn</TableCell>
+            <TableCell>Số Sản Phẩm</TableCell>
+            <TableCell>Tổng Tiền</TableCell>
+            <TableCell>Trạng Thái</TableCell>
+            <TableCell>Ngày Xuất Hoá Đơn</TableCell>
+            <TableCell>Thao Tác</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {invoices.map((invoice) => (
+            <TableRow key={invoice._id}>
+              <TableCell>{getInvoiceTypeText(invoice.invoiceType)}</TableCell>
+              <TableCell>{invoice.items.length}</TableCell>
+              <TableCell>{formatMoney(invoice.totalAmount)}</TableCell>
+              <TableCell>
+                <Chip
+                  label={getStatusText(invoice.status)}
+                  color={getStatusColor(invoice.status)}
+                  size="small"
+                />
+              </TableCell>
+              <TableCell>
+                {new Date(invoice.createdAt).toLocaleDateString('vi-VN')}
+              </TableCell>
+              <TableCell>
+                <Button
+                  size="small"
+                  onClick={() => navigate(`/invoices/${invoice._id}`)}
+                >
+                  Xem Chi Tiết
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+          {invoices.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={6} align="center">
+                Không có hóa đơn nào
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+    </TableContainer>
+  );
 
   if (!customer) {
     return <Typography>Đang tải...</Typography>;
@@ -186,57 +285,18 @@ function CustomerDetail() {
       </Paper>
 
       <Paper sx={{ p: 3 }}>
-        <Typography variant="h5" gutterBottom>
+        <Typography 
+          variant="h5" 
+          gutterBottom
+          sx={{
+            fontWeight: 600,
+            color: 'primary.main',
+            mb: 3
+          }}
+        >
           Lịch Sử Hóa Đơn
         </Typography>
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Loại Hóa Đơn</TableCell>
-                <TableCell>Số Sản Phẩm</TableCell>
-                <TableCell>Tổng Tiền</TableCell>
-                <TableCell>Trạng Thái</TableCell>
-                <TableCell>Ngày Xuất Hoá Đơn</TableCell>
-                <TableCell>Thao Tác</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {invoices.map((invoice) => (
-                <TableRow key={invoice._id}>
-                  <TableCell>{getInvoiceTypeText(invoice.invoiceType)}</TableCell>
-                  <TableCell>{invoice.items.length}</TableCell>
-                  <TableCell>{formatMoney(invoice.totalAmount)}</TableCell>
-                  <TableCell>
-                    <Chip
-                      label={getStatusText(invoice.status)}
-                      color={getStatusColor(invoice.status)}
-                      size="small"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    {new Date(invoice.createdAt).toLocaleDateString('vi-VN')}
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      size="small"
-                      onClick={() => navigate(`/invoices/${invoice._id}`)}
-                    >
-                      Xem Chi Tiết
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {invoices.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={6} align="center">
-                    Không có hóa đơn nào
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
+        {isMobile ? renderMobileInvoiceView() : renderDesktopInvoiceView()}
       </Paper>
     </Container>
   );
