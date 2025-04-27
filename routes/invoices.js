@@ -26,13 +26,49 @@ const generateInvoiceCode = async (type = 'LE') => {
   return code;
 };
 
-// Get all invoices
+// Get total invoices count
+router.get('/count', async (req, res) => {
+  try {
+    const total = await Invoice.countDocuments();
+    res.json({ total });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Get all invoices with pagination and optimized populate
 router.get('/', async (req, res) => {
   try {
-    const invoices = await Invoice.find()
-      .populate('customer')
-      .populate('items.product');
-    res.json(invoices);
+    const { page = 1, limit = 20, sort = '-createdAt', customer } = req.query;
+    const skip = (page - 1) * limit;
+
+    // Xây dựng query
+    const query = {};
+    if (customer) {
+      query.customer = customer;
+    }
+
+    const [invoices, total] = await Promise.all([
+      Invoice.find(query)
+        .select('invoiceCode invoiceType totalAmount status createdAt customer items')
+        .populate('customer', 'name phone email customerType')
+        .populate('items.product', 'name code retailPrice wholesalePrice')
+        .sort(sort)
+        .skip(skip)
+        .limit(parseInt(limit))
+        .lean(),
+      Invoice.countDocuments(query)
+    ]);
+
+    res.json({
+      invoices,
+      pagination: {
+        total,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        pages: Math.ceil(total / limit)
+      }
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

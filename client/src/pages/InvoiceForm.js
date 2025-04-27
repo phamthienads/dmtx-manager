@@ -63,38 +63,66 @@ function InvoiceForm() {
   const fetchCustomers = async () => {
     try {
       const response = await axiosInstance.get('/api/customers');
-      setCustomers(response.data);
+      if (response.data && Array.isArray(response.data)) {
+        setCustomers(response.data);
+      } else if (response.data && response.data.customers && Array.isArray(response.data.customers)) {
+        setCustomers(response.data.customers);
+      } else {
+        console.error('Invalid customers data:', response.data);
+        setCustomers([]);
+      }
     } catch (error) {
       console.error('Error fetching customers:', error);
+      setCustomers([]);
     }
   };
 
   const fetchProducts = async () => {
     try {
       const response = await axiosInstance.get('/api/products');
-      setProducts(response.data);
+      if (response.data && Array.isArray(response.data)) {
+        setProducts(response.data);
+      } else if (response.data && response.data.products && Array.isArray(response.data.products)) {
+        setProducts(response.data.products);
+      } else {
+        console.error('Invalid products data:', response.data);
+        setProducts([]);
+      }
     } catch (error) {
       console.error('Error fetching products:', error);
+      setProducts([]);
     }
   };
 
   const fetchInvoice = async () => {
     try {
       const response = await axiosInstance.get(`/api/invoices/${id}`);
+      if (!response.data) {
+        console.error('Invalid invoice data:', response.data);
+        return;
+      }
+      
+      // Kiểm tra cấu trúc dữ liệu
+      const invoiceData = response.data;
+      if (!invoiceData.customer || !invoiceData.items) {
+        console.error('Invalid invoice data structure:', invoiceData);
+        return;
+      }
+      
       setFormData({
-        customer: response.data.customer._id,
-        invoiceType: response.data.invoiceType,
-        status: response.data.status,
-        invoiceCode: response.data.invoiceCode,
-        items: response.data.items.map(item => ({
+        customer: invoiceData.customer._id,
+        invoiceType: invoiceData.invoiceType,
+        status: invoiceData.status,
+        invoiceCode: invoiceData.invoiceCode,
+        items: invoiceData.items.map(item => ({
           product: item.product._id,
           quantity: item.quantity || 1,
           price: item.price || 0,
           discount: item.discount || 0
         })),
-        debtStartDate: response.data.debtStartDate || '',
-        debtEndDate: response.data.debtEndDate ? new Date(response.data.debtEndDate).toISOString().split('T')[0] : '',
-        createdAt: new Date(response.data.createdAt).toISOString().split('T')[0]
+        debtStartDate: invoiceData.debtStartDate || '',
+        debtEndDate: invoiceData.debtEndDate ? new Date(invoiceData.debtEndDate).toISOString().split('T')[0] : '',
+        createdAt: new Date(invoiceData.createdAt).toISOString().split('T')[0]
       });
     } catch (error) {
       console.error('Error fetching invoice:', error);

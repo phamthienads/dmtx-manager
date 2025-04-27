@@ -35,24 +35,37 @@ function InvoiceList() {
   const [invoices, setInvoices] = useState([]);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(20);
+  const [totalInvoices, setTotalInvoices] = useState(0);
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   useEffect(() => {
     fetchInvoices();
-  }, []);
+  }, [page, rowsPerPage]);
 
   const fetchInvoices = async () => {
     try {
-      const response = await axiosInstance.get('/api/invoices');
-      // Sắp xếp theo ngày tạo giảm dần (mới nhất lên đầu)
-      const sortedInvoices = response.data.sort((a, b) => 
-        new Date(b.createdAt) - new Date(a.createdAt)
-      );
-      setInvoices(sortedInvoices);
+      const response = await axiosInstance.get('/api/invoices', {
+        params: {
+          page: page + 1,
+          limit: rowsPerPage
+        }
+      });
+      
+      // Kiểm tra cấu trúc dữ liệu trả về
+      if (response.data && Array.isArray(response.data.invoices)) {
+        setInvoices(response.data.invoices);
+        setTotalInvoices(response.data.pagination.total);
+      } else {
+        console.error('Invalid invoices data:', response.data);
+        setInvoices([]);
+        setTotalInvoices(0);
+      }
     } catch (error) {
       console.error('Error fetching invoices:', error);
+      setInvoices([]);
+      setTotalInvoices(0);
     }
   };
 
@@ -100,9 +113,13 @@ function InvoiceList() {
     }
   };
 
-  // Tính tổng tiền sau chiết khấu
   const calculateTotal = (items) => {
-    return calculateInvoiceTotal(items);
+    if (!items || !Array.isArray(items)) return 0;
+    return items.reduce((total, item) => {
+      const itemTotal = item.price * item.quantity;
+      const discount = item.discount || 0;
+      return total + (itemTotal - (itemTotal * discount / 100));
+    }, 0);
   };
 
   const handleChangePage = (event, newPage) => {
@@ -114,65 +131,94 @@ function InvoiceList() {
     setPage(0);
   };
 
-  const paginatedInvoices = invoices.slice(
-    page * rowsPerPage,
-    page * rowsPerPage + rowsPerPage
-  );
-
   const renderMobileView = (invoices) => (
-    <Box>
+    <Grid container spacing={2}>
       {invoices.map((invoice) => (
-        <Card key={invoice._id} sx={{ mb: 2 }}>
-          <CardContent>
-            <Box display="flex" justifyContent="space-between" alignItems="center">
-              <Typography variant="subtitle1" fontWeight="bold">
-                {invoice.customer.name}
-              </Typography>
-              <Chip
-                label={getStatusText(invoice.status)}
-                color={getStatusColor(invoice.status)}
-                size="small"
-              />
-            </Box>
-            <Typography variant="body2" color="text.secondary">
-              Mã HĐ: {invoice.invoiceCode || '-'}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Loại: {getInvoiceTypeText(invoice.invoiceType)}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Ngày: {new Date(invoice.createdAt).toLocaleDateString('vi-VN')}
-            </Typography>
-            <Typography variant="body2" fontWeight="bold">
-              Tổng: {formatMoney(invoice.totalAmount)}
-            </Typography>
-            <Box>
-              <IconButton
-                color="primary"
-                onClick={() => navigate(`/invoices/${invoice._id}`)}
-                size="small"
-              >
-                <VisibilityIcon />
-              </IconButton>
-              <IconButton
-                color="primary"
-                onClick={() => navigate(`/invoices/edit/${invoice._id}`)}
-                size="small"
-              >
-                <EditIcon />
-              </IconButton>
-              <IconButton
-                color="error"
-                onClick={() => handleDelete(invoice._id)}
-                size="small"
-              >
-                <DeleteIcon />
-              </IconButton>
-            </Box>
-          </CardContent>
-        </Card>
+        <Grid item xs={12} key={invoice._id}>
+          <Card>
+            <CardContent>
+              <Box display="flex" justifyContent="space-between" alignItems="flex-start">
+                <Box>
+                  <Typography 
+                    variant="h6" 
+                    gutterBottom
+                    sx={{ 
+                      cursor: 'pointer', 
+                      color: 'primary.main',
+                      '&:hover': { textDecoration: 'underline' }
+                    }}
+                    onClick={() => navigate(`/invoices/${invoice._id}`)}
+                  >
+                    {invoice.invoiceCode || 'Chưa có mã'}
+                  </Typography>
+                  <Typography color="textSecondary" gutterBottom>
+                    {invoice.customer ? invoice.customer.name : 'Khách hàng không xác định'}
+                  </Typography>
+                </Box>
+                <Box>
+                  <Chip 
+                    label={getStatusText(invoice.status)} 
+                    color={getStatusColor(invoice.status)} 
+                    size="small" 
+                    sx={{ mb: 1 }}
+                  />
+                  <Box>
+                    <IconButton
+                      color="primary"
+                      onClick={() => navigate(`/invoices/${invoice._id}`)}
+                      size="small"
+                    >
+                      <VisibilityIcon />
+                    </IconButton>
+                    <IconButton
+                      color="primary"
+                      onClick={() => navigate(`/invoices/edit/${invoice._id}`)}
+                      size="small"
+                    >
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton
+                      color="error"
+                      onClick={() => handleDelete(invoice._id)}
+                      size="small"
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </Box>
+                </Box>
+              </Box>
+              <Divider sx={{ my: 1 }} />
+              <Grid container spacing={1}>
+                <Grid item xs={6}>
+                  <Typography variant="body2" color="textSecondary">
+                    Loại:
+                  </Typography>
+                  <Typography variant="body1">
+                    {getInvoiceTypeText(invoice.invoiceType)}
+                  </Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="body2" color="textSecondary">
+                    Ngày tạo:
+                  </Typography>
+                  <Typography variant="body1">
+                    {new Date(invoice.createdAt).toLocaleDateString('vi-VN')}
+                  </Typography>
+                </Grid>
+                <Grid item xs={12}>
+                  <Typography variant="body2" color="textSecondary">
+                    Tổng tiền:
+                  </Typography>
+                  <Typography variant="body1" color="primary">
+                    {formatMoney(invoice.totalAmount)}
+                  </Typography>
+                </Grid>
+              </Grid>
+            </CardContent>
+          </Card>
+        </Grid>
       ))}
-    </Box>
+    </Grid>
   );
 
   const renderDesktopView = (invoices) => (
@@ -180,30 +226,41 @@ function InvoiceList() {
       <Table>
         <TableHead>
           <TableRow>
-            <TableCell>Mã HĐ</TableCell>
+            <TableCell>Mã Hóa Đơn</TableCell>
             <TableCell>Khách Hàng</TableCell>
-            <TableCell>Loại HĐ</TableCell>
+            <TableCell>Loại</TableCell>
             <TableCell>Ngày Tạo</TableCell>
-            <TableCell>Tổng Tiền</TableCell>
             <TableCell>Trạng Thái</TableCell>
+            <TableCell align="right">Tổng Tiền</TableCell>
             <TableCell>Thao Tác</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
           {invoices.map((invoice) => (
             <TableRow key={invoice._id}>
-              <TableCell>{invoice.invoiceCode || '-'}</TableCell>
-              <TableCell>{invoice.customer.name}</TableCell>
+              <TableCell>
+                <Typography
+                  sx={{ 
+                    cursor: 'pointer', 
+                    color: 'primary.main',
+                    '&:hover': { textDecoration: 'underline' }
+                  }}
+                  onClick={() => navigate(`/invoices/${invoice._id}`)}
+                >
+                  {invoice.invoiceCode || 'Chưa có mã'}
+                </Typography>
+              </TableCell>
+              <TableCell>{invoice.customer ? invoice.customer.name : 'Khách hàng không xác định'}</TableCell>
               <TableCell>{getInvoiceTypeText(invoice.invoiceType)}</TableCell>
               <TableCell>{new Date(invoice.createdAt).toLocaleDateString('vi-VN')}</TableCell>
-              <TableCell>{formatMoney(invoice.totalAmount)}</TableCell>
               <TableCell>
-                <Chip
-                  label={getStatusText(invoice.status)}
-                  color={getStatusColor(invoice.status)}
-                  size="small"
+                <Chip 
+                  label={getStatusText(invoice.status)} 
+                  color={getStatusColor(invoice.status)} 
+                  size="small" 
                 />
               </TableCell>
+              <TableCell align="right">{formatMoney(invoice.totalAmount)}</TableCell>
               <TableCell>
                 <IconButton
                   color="primary"
@@ -248,11 +305,12 @@ function InvoiceList() {
       </FormControl>
       <TablePagination
         component="div"
-        count={invoices.length}
+        count={totalInvoices}
         page={page}
         onPageChange={handleChangePage}
         rowsPerPage={rowsPerPage}
-        rowsPerPageOptions={[]}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+        labelRowsPerPage="Số hàng mỗi trang:"
         labelDisplayedRows={({ from, to, count }) => `${from}-${to} của ${count}`}
       />
     </Box>
@@ -292,18 +350,18 @@ function InvoiceList() {
             minWidth: { xs: '100%', sm: '200px' }
           }}
         >
-          Tạo Hóa Đơn Mới
+          Tạo Hóa Đơn
         </Button>
       </Box>
-
+      
       {isMobile ? (
         <>
-          {renderMobileView(paginatedInvoices)}
+          {renderMobileView(invoices)}
           {renderPagination()}
         </>
       ) : (
         <>
-          {renderDesktopView(paginatedInvoices)}
+          {renderDesktopView(invoices)}
           {renderPagination()}
         </>
       )}

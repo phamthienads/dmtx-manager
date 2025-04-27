@@ -3,11 +3,13 @@ const mongoose = require('mongoose');
 const productSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: true
+    required: true,
+    index: true
   },
   code: {
     type: String,
-    sparse: true
+    sparse: true,
+    index: true
   },
   importPrice: {
     type: Number,
@@ -35,9 +37,13 @@ const productSchema = new mongoose.Schema({
   },
   createdAt: {
     type: Date,
-    default: Date.now
+    default: Date.now,
+    index: true
   }
 });
+
+// Thêm compound index cho tìm kiếm
+productSchema.index({ name: 'text', code: 'text' });
 
 // Middleware để tự động tính toán tổng tiền khi có thay đổi
 productSchema.pre('save', function(next) {
@@ -47,6 +53,13 @@ productSchema.pre('save', function(next) {
   this.totalStockAmount = this.retailPrice * this.stock;
   next();
 });
+
+// Tối ưu virtual fields bằng cách tính toán trực tiếp
+productSchema.methods.calculateTotals = function() {
+  this.totalImportAmount = this.importPrice * this.stock;
+  this.totalStockAmount = this.retailPrice * this.stock;
+  return this;
+};
 
 // Thêm virtual để tính toán tổng tiền khi truy vấn
 productSchema.virtual('calculatedTotalImportAmount').get(function() {

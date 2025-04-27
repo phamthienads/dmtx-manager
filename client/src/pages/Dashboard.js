@@ -34,15 +34,15 @@ function Dashboard() {
   const fetchStats = async () => {
     try {
       const [customersRes, productsRes, invoicesRes] = await Promise.all([
-        axiosInstance.get('/api/customers'),
-        axiosInstance.get('/api/products'),
-        axiosInstance.get('/api/invoices')
+        axiosInstance.get('/api/customers/count'),
+        axiosInstance.get('/api/products/count'),
+        axiosInstance.get('/api/invoices/count')
       ]);
 
       setStats({
-        totalCustomers: customersRes.data.length,
-        totalProducts: productsRes.data.length,
-        totalInvoices: invoicesRes.data.length
+        totalCustomers: customersRes.data.total,
+        totalProducts: productsRes.data.total,
+        totalInvoices: invoicesRes.data.total
       });
     } catch (error) {
       console.error('Error fetching stats:', error);

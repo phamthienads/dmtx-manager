@@ -48,11 +48,16 @@ function CustomerDetail() {
 
   const fetchCustomerInvoices = async () => {
     try {
-      const response = await axiosInstance.get('/api/invoices');
-      const customerInvoices = response.data.filter(invoice => invoice.customer._id === id);
-      setInvoices(customerInvoices);
+      const response = await axiosInstance.get(`/api/invoices?customer=${id}`);
+      if (response.data && Array.isArray(response.data.invoices)) {
+        setInvoices(response.data.invoices);
+      } else {
+        console.error('Invalid invoices data:', response.data);
+        setInvoices([]);
+      }
     } catch (error) {
       console.error('Error fetching customer invoices:', error);
+      setInvoices([]);
     }
   };
 
@@ -117,8 +122,17 @@ function CustomerDetail() {
         <Card key={invoice._id} sx={{ mb: 2 }}>
           <CardContent>
             <Box display="flex" justifyContent="space-between" alignItems="center">
-              <Typography variant="subtitle1" fontWeight="bold">
-                {getInvoiceTypeText(invoice.invoiceType)}
+              <Typography 
+                variant="subtitle1" 
+                fontWeight="bold"
+                sx={{ 
+                  cursor: 'pointer', 
+                  color: 'primary.main',
+                  '&:hover': { textDecoration: 'underline' }
+                }}
+                onClick={() => navigate(`/invoices/${invoice._id}`)}
+              >
+                {invoice.invoiceCode || 'Chưa có mã'}
               </Typography>
               <Chip
                 label={getStatusText(invoice.status)}
@@ -158,6 +172,7 @@ function CustomerDetail() {
       <Table>
         <TableHead>
           <TableRow>
+            <TableCell>Mã Hóa Đơn</TableCell>
             <TableCell>Loại Hóa Đơn</TableCell>
             <TableCell>Số Sản Phẩm</TableCell>
             <TableCell>Tổng Tiền</TableCell>
@@ -169,6 +184,18 @@ function CustomerDetail() {
         <TableBody>
           {invoices.map((invoice) => (
             <TableRow key={invoice._id}>
+              <TableCell>
+                <Typography
+                  sx={{ 
+                    cursor: 'pointer', 
+                    color: 'primary.main',
+                    '&:hover': { textDecoration: 'underline' }
+                  }}
+                  onClick={() => navigate(`/invoices/${invoice._id}`)}
+                >
+                  {invoice.invoiceCode || 'Chưa có mã'}
+                </Typography>
+              </TableCell>
               <TableCell>{getInvoiceTypeText(invoice.invoiceType)}</TableCell>
               <TableCell>{invoice.items.length}</TableCell>
               <TableCell>{formatMoney(invoice.totalAmount)}</TableCell>
@@ -194,7 +221,7 @@ function CustomerDetail() {
           ))}
           {invoices.length === 0 && (
             <TableRow>
-              <TableCell colSpan={6} align="center">
+              <TableCell colSpan={7} align="center">
                 Không có hóa đơn nào
               </TableCell>
             </TableRow>

@@ -35,21 +35,37 @@ function ProductList() {
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(20);
+  const [totalProducts, setTotalProducts] = useState(0);
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   useEffect(() => {
     fetchProducts();
-  }, []);
+  }, [page, rowsPerPage]);
 
   const fetchProducts = async () => {
     try {
-      const response = await axiosInstance.get('/api/products');
-      console.log('Products data:', response.data);
-      setProducts(response.data);
+      const response = await axiosInstance.get('/api/products', {
+        params: {
+          page: page + 1,
+          limit: rowsPerPage
+        }
+      });
+      
+      // Đảm bảo response.data.products là một mảng
+      if (response.data && Array.isArray(response.data.products)) {
+        setProducts(response.data.products);
+        setTotalProducts(response.data.pagination.total);
+      } else {
+        console.error('Invalid products data:', response.data);
+        setProducts([]);
+        setTotalProducts(0);
+      }
     } catch (error) {
       console.error('Error fetching products:', error);
+      setProducts([]);
+      setTotalProducts(0);
     }
   };
 
@@ -68,9 +84,12 @@ function ProductList() {
     setSearchTerm(event.target.value);
   };
 
-  const filteredProducts = products.filter(product =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Đảm bảo products là một mảng trước khi filter
+  const filteredProducts = Array.isArray(products) 
+    ? products.filter(product => 
+        product.name.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : [];
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -231,11 +250,12 @@ function ProductList() {
       </FormControl>
       <TablePagination
         component="div"
-        count={filteredProducts.length}
+        count={totalProducts}
         page={page}
         onPageChange={handleChangePage}
         rowsPerPage={rowsPerPage}
-        rowsPerPageOptions={[]}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+        labelRowsPerPage="Số hàng mỗi trang:"
         labelDisplayedRows={({ from, to, count }) => `${from}-${to} của ${count}`}
       />
     </Box>

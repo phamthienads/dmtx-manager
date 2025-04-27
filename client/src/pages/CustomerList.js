@@ -36,18 +36,27 @@ function CustomerList() {
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(20);
+  const [totalCustomers, setTotalCustomers] = useState(0);
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   useEffect(() => {
     fetchCustomers();
-  }, []);
+  }, [page, rowsPerPage]);
 
   const fetchCustomers = async (search = '') => {
     try {
-      const response = await axiosInstance.get(`/api/customers${search ? `?search=${search}` : ''}`);
-      setCustomers(response.data);
+      const response = await axiosInstance.get(`/api/customers`, {
+        params: {
+          search,
+          page: page + 1,
+          limit: rowsPerPage,
+          sort: 'name'
+        }
+      });
+      setCustomers(response.data.customers);
+      setTotalCustomers(response.data.pagination.total);
     } catch (error) {
       console.error('Error fetching customers:', error);
     }
@@ -90,6 +99,15 @@ function CustomerList() {
       default:
         return 'default';
     }
+  };
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
   };
 
   const renderMobileView = () => (
@@ -247,7 +265,7 @@ function CustomerList() {
   );
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4 }}>
+    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Box 
         display="flex" 
         flexDirection={{ xs: 'column', sm: 'row' }}
@@ -301,6 +319,17 @@ function CustomerList() {
       </Box>
 
       {isMobile ? renderMobileView() : renderDesktopView()}
+
+      <TablePagination
+        component="div"
+        count={totalCustomers}
+        page={page}
+        onPageChange={handleChangePage}
+        rowsPerPage={rowsPerPage}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+        labelRowsPerPage="Số hàng mỗi trang:"
+        labelDisplayedRows={({ from, to, count }) => `${from}-${to} của ${count}`}
+      />
     </Container>
   );
 }

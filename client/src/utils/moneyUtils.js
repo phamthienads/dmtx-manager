@@ -6,15 +6,18 @@ export const roundMoney = (amount) => {
 
 // Hàm định dạng số tiền theo chuẩn Việt Nam
 export const formatMoney = (amount) => {
+  if (!amount || isNaN(amount)) return '0 đ';
   return roundMoney(amount).toLocaleString('vi-VN') + ' đ';
 };
 
 // Hàm tính tổng tiền cho một sản phẩm (đã bao gồm chiết khấu)
-export const calculateItemTotal = (price, quantity, discount = 0) => {
-  const itemTotal = Number(price) * Number(quantity);
+export const calculateItemTotal = (item) => {
+  if (!item || !item.price || !item.quantity) return 0;
+  
+  const itemTotal = Number(item.price) * Number(item.quantity);
   if (isNaN(itemTotal)) return 0;
   
-  const discountAmount = (itemTotal * Number(discount || 0) / 100);
+  const discountAmount = (itemTotal * Number(item.discount || 0) / 100);
   const total = itemTotal - discountAmount;
   
   return roundMoney(total);
@@ -22,7 +25,9 @@ export const calculateItemTotal = (price, quantity, discount = 0) => {
 
 // Hàm tính tổng tiền cho toàn bộ hóa đơn
 export const calculateInvoiceTotal = (items) => {
+  if (!Array.isArray(items)) return 0;
+  
   return items.reduce((sum, item) => {
-    return sum + calculateItemTotal(item.price, item.quantity, item.discount);
+    return sum + calculateItemTotal(item);
   }, 0);
 }; 

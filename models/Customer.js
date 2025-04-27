@@ -3,14 +3,17 @@ const mongoose = require('mongoose');
 const customerSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: true
+    required: true,
+    index: true
   },
   email: {
     type: String,
-    default: null
+    default: null,
+    index: true
   },
   phone: {
-    type: String
+    type: String,
+    index: true
   },
   address: {
     type: String
@@ -30,5 +33,8 @@ const customerSchema = new mongoose.Schema({
     default: Date.now
   }
 });
+
+// Thêm compound index cho tìm kiếm
+customerSchema.index({ name: 'text', phone: 'text' });
 
 module.exports = mongoose.model('Customer', customerSchema); 

@@ -2,10 +2,20 @@ const express = require('express');
 const router = express.Router();
 const Customer = require('../models/Customer');
 
+// Get total customers count
+router.get('/count', async (req, res) => {
+  try {
+    const total = await Customer.countDocuments();
+    res.json({ total });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 // Get all customers
 router.get('/', async (req, res) => {
   try {
-    const { search } = req.query;
+    const { search, page = 1, limit = 20, sort = 'name' } = req.query;
     let query = {};
 
     if (search) {
@@ -17,8 +27,27 @@ router.get('/', async (req, res) => {
       };
     }
 
-    const customers = await Customer.find(query);
-    res.json(customers);
+    const skip = (page - 1) * limit;
+    
+    const [customers, total] = await Promise.all([
+      Customer.find(query)
+        .select('name phone email customerType createdAt')
+        .sort(sort)
+        .skip(skip)
+        .limit(parseInt(limit))
+        .lean(),
+      Customer.countDocuments(query)
+    ]);
+
+    res.json({
+      customers,
+      pagination: {
+        total,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        pages: Math.ceil(total / limit)
+      }
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
