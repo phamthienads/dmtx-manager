@@ -66,9 +66,9 @@ function CustomerList() {
   const getCustomerTypeText = (type) => {
     switch (type) {
       case 'retail':
-        return 'Khách Hàng Lẻ';
+        return 'Lẻ';
       case 'wholesale':
-        return 'Khách Hàng Sỉ';
+        return 'Sỉ';
       default:
         return type;
     }
@@ -112,7 +112,7 @@ function CustomerList() {
                     <VisibilityIcon />
                   </IconButton>
                   <IconButton
-          color="primary"
+                    color="primary"
                     onClick={() => navigate(`/customers/edit/${customer._id}`)}
                     size="small"
                   >
@@ -125,18 +125,10 @@ function CustomerList() {
                   >
                     <DeleteIcon />
                   </IconButton>
-      </Box>
-      </Box>
+                </Box>
+              </Box>
               <Divider sx={{ my: 1 }} />
               <Grid container spacing={1}>
-                <Grid item xs={12}>
-                  <Typography variant="body2" color="textSecondary">
-                    Email:
-                  </Typography>
-                  <Typography variant="body1">
-                    {customer.email || '-'}
-                  </Typography>
-                </Grid>
                 <Grid item xs={12}>
                   <Typography variant="body2" color="textSecondary">
                     Số điện thoại:
@@ -172,59 +164,57 @@ function CustomerList() {
   );
 
   const renderDesktopView = () => (
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Tên</TableCell>
-              <TableCell>Loại Khách Hàng</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell>Số Điện Thoại</TableCell>
-              <TableCell>Địa Chỉ</TableCell>
-              <TableCell>Mã Số Thuế</TableCell>
-              <TableCell>Thao Tác</TableCell>
+    <TableContainer component={Paper}>
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableCell>Tên</TableCell>
+            <TableCell>Loại Khách Hàng</TableCell>
+            <TableCell>Số Điện Thoại</TableCell>
+            <TableCell>Địa Chỉ</TableCell>
+            <TableCell>Mã Số Thuế</TableCell>
+            <TableCell>Thao Tác</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {customers.map((customer) => (
+            <TableRow key={customer._id}>
+              <TableCell>{customer.name}</TableCell>
+              <TableCell>
+                <Chip
+                  label={getCustomerTypeText(customer.customerType)}
+                  color={getCustomerTypeColor(customer.customerType)}
+                  size="small"
+                />
+              </TableCell>
+              <TableCell>{customer.phone || '-'}</TableCell>
+              <TableCell>{customer.address || '-'}</TableCell>
+              <TableCell>{customer.taxCode || '-'}</TableCell>
+              <TableCell>
+                <IconButton
+                  color="primary"
+                  onClick={() => navigate(`/customers/${customer._id}`)}
+                >
+                  <VisibilityIcon />
+                </IconButton>
+                <IconButton
+                  color="primary"
+                  onClick={() => navigate(`/customers/edit/${customer._id}`)}
+                >
+                  <EditIcon />
+                </IconButton>
+                <IconButton
+                  color="error"
+                  onClick={() => handleDelete(customer._id)}
+                >
+                  <DeleteIcon />
+                </IconButton>
+              </TableCell>
             </TableRow>
-          </TableHead>
-          <TableBody>
-            {customers.map((customer) => (
-              <TableRow key={customer._id}>
-                <TableCell>{customer.name}</TableCell>
-                <TableCell>
-                  <Chip
-                    label={getCustomerTypeText(customer.customerType)}
-                    color={getCustomerTypeColor(customer.customerType)}
-                    size="small"
-                  />
-                </TableCell>
-                <TableCell>{customer.email || '-'}</TableCell>
-                <TableCell>{customer.phone || '-'}</TableCell>
-                <TableCell>{customer.address || '-'}</TableCell>
-                <TableCell>{customer.taxCode || '-'}</TableCell>
-                <TableCell>
-                  <IconButton
-                    color="primary"
-                    onClick={() => navigate(`/customers/${customer._id}`)}
-                  >
-                    <VisibilityIcon />
-                  </IconButton>
-                  <IconButton
-                    color="primary"
-                    onClick={() => navigate(`/customers/edit/${customer._id}`)}
-                  >
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton
-                    color="error"
-                    onClick={() => handleDelete(customer._id)}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
   );
 
   return (

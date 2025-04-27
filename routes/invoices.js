@@ -4,6 +4,28 @@ const Invoice = require('../models/Invoice');
 const Customer = require('../models/Customer');
 const Product = require('../models/Product');
 
+// Hàm tạo mã hóa đơn
+const generateInvoiceCode = async (type = 'LE') => {
+  const now = new Date();
+  const day = String(now.getDate()).padStart(2, '0');
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const year = String(now.getFullYear()).slice(-2);
+  
+  // Tạo mã ngẫu nhiên 5 ký tự
+  const randomChars = Math.random().toString(36).substring(2, 7).toUpperCase();
+  
+  const code = `${day}${month}${year}${type}${randomChars}`;
+  
+  // Kiểm tra xem mã đã tồn tại chưa
+  const existingInvoice = await Invoice.findOne({ invoiceCode: code });
+  if (existingInvoice) {
+    // Nếu mã đã tồn tại, tạo lại
+    return generateInvoiceCode(type);
+  }
+  
+  return code;
+};
+
 // Get all invoices
 router.get('/', async (req, res) => {
   try {
@@ -67,9 +89,13 @@ router.post('/', async (req, res) => {
       return sum + roundMoney(itemTotal - discountAmount);
     }, 0);
 
+    // Tạo mã hóa đơn
+    const invoiceCode = await generateInvoiceCode(req.body.invoiceType === 'wholesale' ? 'SI' : 'LE');
+
     const invoice = new Invoice({
       customer: customer._id,
       invoiceType: req.body.invoiceType,
+      invoiceCode,
       items,
       totalAmount,
       status: req.body.status || 'pending',
@@ -81,6 +107,7 @@ router.post('/', async (req, res) => {
     const newInvoice = await invoice.save();
     res.status(201).json(newInvoice);
   } catch (err) {
+    console.error('Error creating invoice:', err);
     res.status(400).json({ message: err.message });
   }
 });
@@ -90,6 +117,12 @@ router.patch('/:id', async (req, res) => {
   try {
     const invoice = await Invoice.findById(req.params.id);
     if (!invoice) return res.status(404).json({ message: 'Invoice not found' });
+
+    // Nếu chưa có mã hóa đơn, tạo mới
+    if (!invoice.invoiceCode) {
+      const newCode = await generateInvoiceCode(invoice.invoiceType === 'wholesale' ? 'SI' : 'LE');
+      invoice.invoiceCode = newCode;
+    }
 
     // Cập nhật các trường cơ bản
     if (req.body.customer) invoice.customer = req.body.customer;

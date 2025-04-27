@@ -19,7 +19,8 @@ import {
   Grid,
   useMediaQuery,
   useTheme,
-  Divider
+  Divider,
+  TableSortLabel
 } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, Visibility as VisibilityIcon } from '@mui/icons-material';
 import axiosInstance from '../utils/axios';
@@ -38,7 +39,11 @@ function InvoiceList() {
   const fetchInvoices = async () => {
     try {
       const response = await axiosInstance.get('/api/invoices');
-      setInvoices(response.data);
+      // Sắp xếp theo ngày tạo giảm dần (mới nhất lên đầu)
+      const sortedInvoices = response.data.sort((a, b) => 
+        new Date(b.createdAt) - new Date(a.createdAt)
+      );
+      setInvoices(sortedInvoices);
     } catch (error) {
       console.error('Error fetching invoices:', error);
     }
@@ -80,9 +85,9 @@ function InvoiceList() {
   const getInvoiceTypeText = (type) => {
     switch (type) {
       case 'retail':
-        return 'Hóa Đơn Bán Lẻ';
+        return 'Lẻ';
       case 'wholesale':
-        return 'Hóa Đơn Bán Sỉ';
+        return 'Sỉ';
       default:
         return type;
     }
@@ -94,163 +99,115 @@ function InvoiceList() {
   };
 
   const renderMobileView = () => (
-    <Grid container spacing={2}>
+    <Box>
       {invoices.map((invoice) => (
-        <Grid item xs={12} key={invoice._id}>
-          <Card>
-            <CardContent>
-              <Box display="flex" justifyContent="space-between" alignItems="flex-start">
-                <Box>
-                  <Typography variant="h6" gutterBottom>
-                    {invoice.customer?.name || '-'}
-                  </Typography>
-                  <Box display="flex" gap={1} mb={1}>
-                    <Chip
-                      label={getInvoiceTypeText(invoice.invoiceType)}
-                      color="primary"
-                      size="small"
-                    />
-                    <Chip
-                      label={getStatusText(invoice.status)}
-                      color={getStatusColor(invoice.status)}
-                      size="small"
-                    />
-                  </Box>
-                </Box>
-                <Box>
-                  <IconButton
-                    color="primary"
-                    onClick={() => navigate(`/invoices/${invoice._id}`)}
-                    size="small"
-                  >
-                    <VisibilityIcon />
-                  </IconButton>
-                  <IconButton
-          color="primary"
-                    onClick={() => navigate(`/invoices/edit/${invoice._id}`)}
-                    size="small"
-                  >
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton
-                    color="error"
-                    onClick={() => handleDelete(invoice._id)}
-                    size="small"
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </Box>
-      </Box>
-              <Divider sx={{ my: 1 }} />
-              <Grid container spacing={1}>
-                <Grid item xs={6}>
-                  <Typography variant="body2" color="textSecondary">
-                    Số sản phẩm:
-                  </Typography>
-                  <Typography variant="body1">
-                    {invoice.items.length}
-                  </Typography>
-                </Grid>
-                <Grid item xs={6}>
-                  <Typography variant="body2" color="textSecondary">
-                    Tổng tiền:
-                  </Typography>
-                  <Typography variant="body1" color="primary" fontWeight="bold">
-                    {formatMoney(calculateTotal(invoice.items))}
-                  </Typography>
-                </Grid>
-                <Grid item xs={6}>
-                  <Typography variant="body2" color="textSecondary">
-                    Ngày xuất:
-                  </Typography>
-                  <Typography variant="body1">
-                    {new Date(invoice.createdAt).toLocaleDateString('vi-VN')}
-                  </Typography>
-                </Grid>
-                {invoice.status === 'debt' && invoice.debtEndDate && (
-                  <Grid item xs={6}>
-                    <Typography variant="body2" color="textSecondary">
-                      Hạn thanh toán:
-                    </Typography>
-                    <Typography variant="body1" color="error">
-                      {new Date(invoice.debtEndDate).toLocaleDateString('vi-VN')}
-                    </Typography>
-                  </Grid>
-                )}
-              </Grid>
-            </CardContent>
-          </Card>
-        </Grid>
+        <Card key={invoice._id} sx={{ mb: 2 }}>
+          <CardContent>
+            <Box display="flex" justifyContent="space-between" alignItems="center">
+              <Typography variant="subtitle1" fontWeight="bold">
+                {invoice.customer.name}
+              </Typography>
+              <Chip
+                label={getStatusText(invoice.status)}
+                color={getStatusColor(invoice.status)}
+                size="small"
+              />
+            </Box>
+            <Typography variant="body2" color="text.secondary">
+              Mã HĐ: {invoice.invoiceCode || '-'}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Loại: {getInvoiceTypeText(invoice.invoiceType)}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Ngày: {new Date(invoice.createdAt).toLocaleDateString('vi-VN')}
+            </Typography>
+            <Typography variant="body2" fontWeight="bold">
+              Tổng: {formatMoney(invoice.totalAmount)}
+            </Typography>
+            <Box>
+              <IconButton
+                color="primary"
+                onClick={() => navigate(`/invoices/${invoice._id}`)}
+                size="small"
+              >
+                <VisibilityIcon />
+              </IconButton>
+              <IconButton
+                color="primary"
+                onClick={() => navigate(`/invoices/edit/${invoice._id}`)}
+                size="small"
+              >
+                <EditIcon />
+              </IconButton>
+              <IconButton
+                color="error"
+                onClick={() => handleDelete(invoice._id)}
+                size="small"
+              >
+                <DeleteIcon />
+              </IconButton>
+            </Box>
+          </CardContent>
+        </Card>
       ))}
-    </Grid>
+    </Box>
   );
 
   const renderDesktopView = () => (
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Khách Hàng</TableCell>
-              <TableCell>Loại Hóa Đơn</TableCell>
-              <TableCell>Số Sản Phẩm</TableCell>
-              <TableCell>Tổng Tiền</TableCell>
-              <TableCell>Trạng Thái</TableCell>
-              <TableCell>Hạn Thanh Toán</TableCell>
-              <TableCell>Ngày Xuất Hoá Đơn</TableCell>
-              <TableCell>Thao Tác</TableCell>
+    <TableContainer component={Paper}>
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableCell>Mã HĐ</TableCell>
+            <TableCell>Khách Hàng</TableCell>
+            <TableCell>Loại HĐ</TableCell>
+            <TableCell>Ngày Tạo</TableCell>
+            <TableCell>Tổng Tiền</TableCell>
+            <TableCell>Trạng Thái</TableCell>
+            <TableCell>Thao Tác</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {invoices.map((invoice) => (
+            <TableRow key={invoice._id}>
+              <TableCell>{invoice.invoiceCode || '-'}</TableCell>
+              <TableCell>{invoice.customer.name}</TableCell>
+              <TableCell>{getInvoiceTypeText(invoice.invoiceType)}</TableCell>
+              <TableCell>{new Date(invoice.createdAt).toLocaleDateString('vi-VN')}</TableCell>
+              <TableCell>{formatMoney(invoice.totalAmount)}</TableCell>
+              <TableCell>
+                <Chip
+                  label={getStatusText(invoice.status)}
+                  color={getStatusColor(invoice.status)}
+                  size="small"
+                />
+              </TableCell>
+              <TableCell>
+                <IconButton
+                  color="primary"
+                  onClick={() => navigate(`/invoices/${invoice._id}`)}
+                >
+                  <VisibilityIcon />
+                </IconButton>
+                <IconButton
+                  color="primary"
+                  onClick={() => navigate(`/invoices/edit/${invoice._id}`)}
+                >
+                  <EditIcon />
+                </IconButton>
+                <IconButton
+                  color="error"
+                  onClick={() => handleDelete(invoice._id)}
+                >
+                  <DeleteIcon />
+                </IconButton>
+              </TableCell>
             </TableRow>
-          </TableHead>
-          <TableBody>
-            {invoices.map((invoice) => (
-              <TableRow key={invoice._id}>
-                <TableCell>{invoice.customer?.name || '-'}</TableCell>
-                <TableCell>{getInvoiceTypeText(invoice.invoiceType)}</TableCell>
-                <TableCell>{invoice.items.length}</TableCell>
-                <TableCell>{formatMoney(calculateTotal(invoice.items))}</TableCell>
-                <TableCell>
-                  <Chip
-                    label={getStatusText(invoice.status)}
-                    color={getStatusColor(invoice.status)}
-                    size="small"
-                  />
-                </TableCell>
-                <TableCell>
-                  {invoice.status === 'debt' && invoice.debtEndDate ? (
-                    new Date(invoice.debtEndDate).toLocaleDateString('vi-VN')
-                  ) : (
-                    <Typography variant="body2" color="text.secondary">
-                      -
-                    </Typography>
-                  )}
-                </TableCell>
-                <TableCell>
-                  {new Date(invoice.createdAt).toLocaleDateString('vi-VN')}
-                </TableCell>
-                <TableCell>
-                  <IconButton
-                    color="primary"
-                    onClick={() => navigate(`/invoices/${invoice._id}`)}
-                  >
-                    <VisibilityIcon />
-                  </IconButton>
-                  <IconButton
-                    color="primary"
-                    onClick={() => navigate(`/invoices/edit/${invoice._id}`)}
-                  >
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton
-                    color="error"
-                    onClick={() => handleDelete(invoice._id)}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
   );
 
   return (

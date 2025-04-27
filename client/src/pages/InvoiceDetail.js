@@ -296,20 +296,39 @@ function InvoiceDetail() {
   return (
     <Container maxWidth="lg" sx={{ mt: 4 }}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Button
-          startIcon={<ArrowBackIcon />}
-          onClick={() => navigate('/invoices')}
-        >
-          Quay lại
-        </Button>
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<PrintIcon />}
-          onClick={handlePrint}
-        >
-          Xuất Hóa Đơn
-        </Button>
+        <Box>
+          <Typography variant="h4" gutterBottom>
+            Chi Tiết Hóa Đơn
+          </Typography>
+          <Typography variant="h6" color="text.secondary">
+            Mã hóa đơn: {invoice.invoiceCode}
+          </Typography>
+        </Box>
+        <Box>
+          <Button
+            variant="outlined"
+            startIcon={<ArrowBackIcon />}
+            onClick={() => navigate('/invoices')}
+            sx={{ mr: 1 }}
+          >
+            Quay lại
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<EditIcon />}
+            onClick={() => navigate(`/invoices/edit/${id}`)}
+            sx={{ mr: 1 }}
+          >
+            Chỉnh sửa
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<PrintIcon />}
+            onClick={handlePrint}
+          >
+            In hóa đơn
+          </Button>
+        </Box>
       </Box>
 
       <Paper sx={{ p: 3, mb: 4 }}>

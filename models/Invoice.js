@@ -6,6 +6,11 @@ const invoiceSchema = new mongoose.Schema({
     ref: 'Customer',
     required: true
   },
+  invoiceCode: {
+    type: String,
+    unique: true,
+    sparse: true
+  },
   invoiceType: {
     type: String,
     enum: ['retail', 'wholesale', 'ecommerce'],

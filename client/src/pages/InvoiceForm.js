@@ -84,6 +84,7 @@ function InvoiceForm() {
         customer: response.data.customer._id,
         invoiceType: response.data.invoiceType,
         status: response.data.status,
+        invoiceCode: response.data.invoiceCode,
         items: response.data.items.map(item => ({
           product: item.product._id,
           quantity: item.quantity || 1,
@@ -305,6 +306,18 @@ function InvoiceForm() {
           Thông tin khách hàng
         </Typography>
         <Grid container spacing={2}>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="Mã hóa đơn"
+              value={formData.invoiceCode || '-'}
+              InputProps={{
+                readOnly: true,
+                disabled: true
+              }}
+              variant="outlined"
+            />
+          </Grid>
           <Grid item xs={12} sm={6}>
             <FormControl fullWidth>
               <InputLabel>Khách hàng</InputLabel>

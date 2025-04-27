@@ -11,6 +11,8 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@react-router/dev": "^7.5.2",
+    "@vercel/react-router": "^1.1.0",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",

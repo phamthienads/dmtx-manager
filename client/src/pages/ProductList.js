@@ -18,7 +18,8 @@ import {
   Grid,
   useMediaQuery,
   useTheme,
-  Divider
+  Divider,
+  TextField
 } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
 import axiosInstance from '../utils/axios';
@@ -26,6 +27,7 @@ import { formatMoney } from '../utils/moneyUtils';
 
 function ProductList() {
   const [products, setProducts] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -55,9 +57,17 @@ function ProductList() {
     }
   };
 
+  const handleSearch = (event) => {
+    setSearchTerm(event.target.value);
+  };
+
+  const filteredProducts = products.filter(product =>
+    product.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   const renderMobileView = () => (
     <Grid container spacing={2}>
-      {products.map((product) => (
+      {filteredProducts.map((product) => (
         <Grid item xs={12} key={product._id}>
           <Card>
             <CardContent>
@@ -153,7 +163,7 @@ function ProductList() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {products.map((product) => (
+            {filteredProducts.map((product) => (
               <TableRow key={product._id}>
                 <TableCell>{product.name}</TableCell>
                 <TableCell>{product.code || '-'}</TableCell>
@@ -195,6 +205,16 @@ function ProductList() {
         >
           Thêm Sản Phẩm
         </Button>
+      </Box>
+      <Box mb={3}>
+        <TextField
+          fullWidth
+          variant="outlined"
+          placeholder="Tìm kiếm sản phẩm..."
+          value={searchTerm}
+          onChange={handleSearch}
+          sx={{ mb: 2 }}
+        />
       </Box>
       {isMobile ? renderMobileView() : renderDesktopView()}
     </Container>
