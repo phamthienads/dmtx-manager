@@ -71,7 +71,7 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           '@media (max-width:600px)': {
-            margin: '8px 0',
+            margin: '0',
           },
         },
       },
