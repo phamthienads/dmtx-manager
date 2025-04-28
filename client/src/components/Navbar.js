@@ -19,7 +19,6 @@ import MenuIcon from '@mui/icons-material/Menu';
 import PeopleIcon from '@mui/icons-material/People';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import ReceiptIcon from '@mui/icons-material/Receipt';
-import StoreIcon from '@mui/icons-material/Store';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 

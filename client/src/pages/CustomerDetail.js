@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -14,7 +14,6 @@ import {
   TableRow,
   Chip,
   Button,
-  Divider,
   Card,
   CardContent,
   useMediaQuery,
@@ -32,34 +31,28 @@ function CustomerDetail() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  useEffect(() => {
-    fetchCustomer();
-    fetchCustomerInvoices();
-  }, [id]);
-
-  const fetchCustomer = async () => {
+  const fetchCustomer = useCallback(async () => {
     try {
       const response = await axiosInstance.get(`/api/customers/${id}`);
       setCustomer(response.data);
     } catch (error) {
       console.error('Error fetching customer:', error);
     }
-  };
+  }, [id]);
 
-  const fetchCustomerInvoices = async () => {
+  const fetchCustomerInvoices = useCallback(async () => {
     try {
       const response = await axiosInstance.get(`/api/invoices?customer=${id}`);
-      if (response.data && Array.isArray(response.data.invoices)) {
-        setInvoices(response.data.invoices);
-      } else {
-        console.error('Invalid invoices data:', response.data);
-        setInvoices([]);
-      }
+      setInvoices(response.data.invoices || []);
     } catch (error) {
       console.error('Error fetching customer invoices:', error);
-      setInvoices([]);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    fetchCustomer();
+    fetchCustomerInvoices();
+  }, [fetchCustomer, fetchCustomerInvoices]);
 
   const getStatusColor = (status) => {
     switch (status) {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -22,16 +22,10 @@ import {
   useMediaQuery,
   useTheme,
   Divider,
-  TablePagination,
-  FormControl,
-  Select,
-  MenuItem,
-  InputLabel
 } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, Visibility as VisibilityIcon, Search as SearchIcon, ArrowUpward as ArrowUpwardIcon, ArrowDownward as ArrowDownwardIcon } from '@mui/icons-material';
 import axiosInstance from '../utils/axios';
 import Pagination from '../components/Pagination';
-import { formatMoney } from '../utils/moneyUtils';
 
 function CustomerList() {
   const [customers, setCustomers] = useState([]);
@@ -44,11 +38,7 @@ function CustomerList() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  useEffect(() => {
-    fetchCustomers();
-  }, [page, rowsPerPage, searchTerm, sortOrder]);
-
-  const fetchCustomers = async () => {
+  const fetchCustomers = useCallback(async () => {
     try {
       const response = await axiosInstance.get(`/api/customers`, {
         params: {
@@ -58,12 +48,25 @@ function CustomerList() {
           sort: sortOrder
         }
       });
-      setCustomers(response.data.customers);
-      setTotalCustomers(response.data.pagination.total);
+      
+      if (response.data && Array.isArray(response.data.customers)) {
+        setCustomers(response.data.customers);
+        setTotalCustomers(response.data.total || 0);
+      } else {
+        console.error('Invalid customers data:', response.data);
+        setCustomers([]);
+        setTotalCustomers(0);
+      }
     } catch (error) {
       console.error('Error fetching customers:', error);
+      setCustomers([]);
+      setTotalCustomers(0);
     }
-  };
+  }, [page, rowsPerPage, searchTerm, sortOrder]);
+
+  useEffect(() => {
+    fetchCustomers();
+  }, [fetchCustomers]);
 
   const handleSearch = (e) => {
     const value = e.target.value;
@@ -101,45 +104,6 @@ function CustomerList() {
         return 'secondary';
       default:
         return 'default';
-    }
-  };
-
-  const getStatusText = (status) => {
-    switch (status) {
-      case 'paid':
-        return 'Đã Thanh Toán';
-      case 'debt':
-        return 'Công Nợ';
-      default:
-        return status;
-    }
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'paid':
-        return 'success';
-      case 'debt':
-        return 'secondary';
-      default:
-        return 'default';
-    }
-  };
-
-  const getLastInvoiceColor = (date) => {
-    if (!date) return 'text.primary';
-    
-    const today = new Date();
-    const invoiceDate = new Date(date);
-    const diffTime = Math.abs(today - invoiceDate);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays <= 7) {
-      return 'success.main'; // Màu xanh lá cho hóa đơn trong 1 tuần
-    } else if (diffDays <= 14) {
-      return 'warning.main'; // Màu vàng cho hóa đơn trong 2 tuần
-    } else {
-      return 'error.main'; // Màu đỏ cho hóa đơn trên 2 tuần
     }
   };
 

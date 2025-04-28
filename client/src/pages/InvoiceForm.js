@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Container,
@@ -23,7 +23,6 @@ import {
   useTheme,
   Card,
   CardContent,
-  Divider,
   Stepper,
   Step,
   StepLabel,
@@ -51,17 +50,9 @@ function InvoiceForm() {
   const isEdit = Boolean(id);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const [activeStep, setActiveStep] = useState(0);
+  const [activeStep] = useState(0);
 
-  useEffect(() => {
-    fetchCustomers();
-    fetchProducts();
-    if (isEdit) {
-      fetchInvoice();
-    }
-  }, [id]);
-
-  const fetchCustomers = async () => {
+  const fetchCustomers = useCallback(async () => {
     try {
       const response = await axiosInstance.get('/api/customers');
       if (response.data && Array.isArray(response.data)) {
@@ -76,13 +67,13 @@ function InvoiceForm() {
       console.error('Error fetching customers:', error);
       setCustomers([]);
     }
-  };
+  }, []);
 
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     try {
       const response = await axiosInstance.get('/api/products', {
         params: {
-          limit: 1000 // Lấy tất cả sản phẩm
+          limit: 1000
         }
       });
       
@@ -96,9 +87,9 @@ function InvoiceForm() {
       console.error('Error fetching products:', error);
       setProducts([]);
     }
-  };
+  }, []);
 
-  const fetchInvoice = async () => {
+  const fetchInvoice = useCallback(async () => {
     try {
       const response = await axiosInstance.get(`/api/invoices/${id}`);
       if (!response.data) {
@@ -141,7 +132,15 @@ function InvoiceForm() {
     } catch (error) {
       console.error('Error fetching invoice:', error);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    fetchCustomers();
+    fetchProducts();
+    if (isEdit) {
+      fetchInvoice();
+    }
+  }, [id, isEdit, fetchInvoice, fetchCustomers, fetchProducts]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -342,17 +341,6 @@ function InvoiceForm() {
     }
   };
 
-  const getInvoiceTypeText = (type) => {
-    switch (type) {
-      case 'retail':
-        return 'Hóa Đơn Bán Lẻ';
-      case 'wholesale':
-        return 'Hóa Đơn Bán Sỉ';
-      default:
-        return type;
-    }
-  };
-
   const renderCustomerInfo = () => (
     <Card sx={{ mb: 3 }}>
       <CardContent>
@@ -425,8 +413,12 @@ function InvoiceForm() {
                   height: '56px'
                 },
                 '& .MuiInputBase-input': {
-                  height: '56px',
-                  padding: '0 14px'
+                  fontSize: '1rem',
+                  padding: '16px 20px',
+                  height: 'auto'
+                },
+                '& .MuiOutlinedInput-root': {
+                  height: 'auto'
                 }
               }}
             />

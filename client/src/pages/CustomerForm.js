@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Container,
@@ -30,20 +30,21 @@ function CustomerForm() {
   const { id } = useParams();
   const isEdit = Boolean(id);
 
-  useEffect(() => {
-    if (isEdit) {
-      fetchCustomer();
-    }
-  }, [id]);
-
-  const fetchCustomer = async () => {
+  const fetchCustomer = useCallback(async () => {
     try {
       const response = await axiosInstance.get(`/api/customers/${id}`);
       setFormData(response.data);
     } catch (error) {
       console.error('Error fetching customer:', error);
+      setError('Không thể tải thông tin khách hàng. Vui lòng thử lại sau.');
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    if (isEdit) {
+      fetchCustomer();
+    }
+  }, [isEdit, fetchCustomer]);
 
   const handleChange = (e) => {
     setFormData({

@@ -5,8 +5,7 @@ import {
   ListItem, 
   ListItemIcon, 
   ListItemText, 
-  ListItemButton,
-  useTheme
+  ListItemButton
 } from '@mui/material';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 import PeopleIcon from '@mui/icons-material/People';
@@ -14,7 +13,6 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import ReceiptIcon from '@mui/icons-material/Receipt';
 
 function Sidebar() {
-  const theme = useTheme();
   const location = useLocation();
 
   const menuItems = [
