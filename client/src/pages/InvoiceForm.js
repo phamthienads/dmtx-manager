@@ -420,6 +420,15 @@ function InvoiceForm() {
               value={formData.createdAt}
               onChange={handleChange}
               InputLabelProps={{ shrink: true }}
+              sx={{
+                '& .MuiInputBase-root': {
+                  height: '56px'
+                },
+                '& .MuiInputBase-input': {
+                  height: '56px',
+                  padding: '0 14px'
+                }
+              }}
             />
           </Grid>
         </Grid>
