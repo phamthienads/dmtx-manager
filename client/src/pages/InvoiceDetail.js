@@ -513,6 +513,37 @@ function InvoiceDetail() {
               {formatMoney(invoice.totalAmount)}
             </Typography>
           </Box>
+
+          {invoice.status === 'debt' && (
+            <>
+              <Divider sx={{ my: 2 }} />
+              <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                  Đã thanh toán
+                </Typography>
+                <Typography variant="h6" color="success.main" sx={{ fontWeight: 600 }}>
+                  {formatMoney(invoice.paidAmount || 0)}
+                </Typography>
+              </Box>
+              <Box display="flex" justifyContent="space-between" alignItems="center">
+                <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                  Còn lại
+                </Typography>
+                <Typography variant="h6" color="error.main" sx={{ fontWeight: 600 }}>
+                  {formatMoney(invoice.remainingAmount || invoice.totalAmount)}
+                </Typography>
+              </Box>
+              {invoice.debtEndDate && (
+                <Typography 
+                  variant="body2" 
+                  color="text.secondary" 
+                  sx={{ mt: 1, textAlign: 'right' }}
+                >
+                  Hạn thanh toán: {new Date(invoice.debtEndDate).toLocaleDateString('vi-VN')}
+                </Typography>
+              )}
+            </>
+          )}
         </CardContent>
       </Card>
     </Box>

@@ -24,6 +24,7 @@ function ProductForm() {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [duplicateWarning, setDuplicateWarning] = useState('');
   const navigate = useNavigate();
   const { id } = useParams();
   const isEdit = Boolean(id);
@@ -48,11 +49,46 @@ function ProductForm() {
     }
   }, [id]);
 
+  const checkDuplicateProduct = useCallback(async (name) => {
+    if (!name) return;
+    try {
+      const response = await axiosInstance.get('/api/products', {
+        params: {
+          search: name,
+          limit: 1
+        }
+      });
+      
+      if (response.data.products.length > 0) {
+        const existingProduct = response.data.products[0];
+        if (isEdit && existingProduct._id === id) {
+          setDuplicateWarning('');
+          return;
+        }
+        setDuplicateWarning(`Cảnh báo: Đã tồn tại sản phẩm với tên "${existingProduct.name}" trong hệ thống.`);
+      } else {
+        setDuplicateWarning('');
+      }
+    } catch (error) {
+      console.error('Error checking duplicate product:', error);
+    }
+  }, [isEdit, id]);
+
   useEffect(() => {
     if (isEdit) {
       fetchProduct();
     }
   }, [isEdit, fetchProduct]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (formData.name) {
+        checkDuplicateProduct(formData.name);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [formData.name, checkDuplicateProduct]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -115,6 +151,12 @@ function ProductForm() {
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}
+          </Alert>
+        )}
+
+        {duplicateWarning && (
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            {duplicateWarning}
           </Alert>
         )}
 

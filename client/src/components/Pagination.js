@@ -1,7 +1,9 @@
 import React from 'react';
 import {
   Box,
-  TablePagination
+  TablePagination,
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
 
 function Pagination({
@@ -12,6 +14,9 @@ function Pagination({
   onRowsPerPageChange,
   rowsPerPageOptions = [10, 20, 50, 100]
 }) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
   const handlePageChange = (event, newPage) => {
     if (onPageChange) {
       onPageChange(event, newPage);
@@ -25,7 +30,23 @@ function Pagination({
   };
 
   return (
-    <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+    <Box sx={{ 
+      display: 'flex', 
+      justifyContent: 'center', 
+      mt: 2,
+      '& .MuiTablePagination-root': {
+        width: '100%',
+        maxWidth: isMobile ? '100%' : 'auto',
+        overflowX: 'auto',
+        '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': {
+          fontSize: isMobile ? '0.75rem' : '0.875rem',
+          whiteSpace: 'nowrap'
+        },
+        '& .MuiTablePagination-select': {
+          fontSize: isMobile ? '0.75rem' : '0.875rem'
+        }
+      }
+    }}>
       <TablePagination
         component="div"
         count={total}
@@ -33,11 +54,11 @@ function Pagination({
         onPageChange={handlePageChange}
         rowsPerPage={rowsPerPage}
         onRowsPerPageChange={handleRowsPerPageChange}
-        rowsPerPageOptions={rowsPerPageOptions}
+        rowsPerPageOptions={isMobile ? [10, 20] : rowsPerPageOptions}
         labelRowsPerPage="Số hàng mỗi trang:"
         labelDisplayedRows={({ from, to, count }) => {
           if (count === 0) return '0-0 của 0';
-          return `${from}-${to} của ${count}`;
+          return isMobile ? `${from}-${to}/${count}` : `${from}-${to} của ${count}`;
         }}
       />
     </Box>
