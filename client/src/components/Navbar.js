@@ -126,8 +126,8 @@ function Navbar() {
                 src="/logo.png" 
                 alt="Logo" 
                 style={{ 
-                  width: '45px', 
-                  height: '45px',
+                  width: '75px', 
+                  height: '75px',
                   objectFit: 'contain'
                 }} 
               />
@@ -159,8 +159,8 @@ function Navbar() {
                 src="/logo.png" 
                 alt="Logo" 
                 style={{ 
-                  width: '50px', 
-                  height: '50px',
+                  width: '75px', 
+                  height: '75px',
                   objectFit: 'contain'
                 }} 
               />

@@ -19,11 +19,6 @@ import {
   useMediaQuery,
   useTheme,
   Divider,
-  TablePagination,
-  FormControl,
-  Select,
-  MenuItem,
-  InputLabel,
   TextField,
   CircularProgress,
   Alert
@@ -31,6 +26,7 @@ import {
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
 import axiosInstance from '../utils/axios';
 import { formatMoney } from '../utils/moneyUtils';
+import Pagination from '../components/Pagination';
 
 function ProductList() {
   const [products, setProducts] = useState([]);
@@ -233,31 +229,14 @@ function ProductList() {
   );
 
   const renderPagination = () => (
-    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
-      <FormControl sx={{ minWidth: 120 }}>
-        <InputLabel>Hiển thị</InputLabel>
-        <Select
-          value={rowsPerPage}
-          onChange={handleChangeRowsPerPage}
-          label="Hiển thị"
-          size="small"
-        >
-          <MenuItem value={20}>20</MenuItem>
-          <MenuItem value={50}>50</MenuItem>
-          <MenuItem value={100}>100</MenuItem>
-        </Select>
-      </FormControl>
-      <TablePagination
-        component="div"
-        count={totalProducts}
-        page={page}
-        onPageChange={handleChangePage}
-        rowsPerPage={rowsPerPage}
-        onRowsPerPageChange={handleChangeRowsPerPage}
-        labelRowsPerPage="Số hàng mỗi trang:"
-        labelDisplayedRows={({ from, to, count }) => `${from}-${to} của ${count}`}
-      />
-    </Box>
+    <Pagination
+      total={totalProducts}
+      page={page}
+      rowsPerPage={rowsPerPage}
+      onPageChange={handleChangePage}
+      onRowsPerPageChange={handleChangeRowsPerPage}
+      rowsPerPageOptions={[20, 50, 100]}
+    />
   );
 
   return (

@@ -20,17 +20,13 @@ import {
   useMediaQuery,
   useTheme,
   Divider,
-  TablePagination,
-  FormControl,
-  Select,
-  MenuItem,
-  InputLabel,
   CircularProgress,
   Alert
 } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, Visibility as VisibilityIcon } from '@mui/icons-material';
 import axiosInstance from '../utils/axios';
 import { formatMoney } from '../utils/moneyUtils';
+import Pagination from '../components/Pagination';
 
 function InvoiceList() {
   const [invoices, setInvoices] = useState([]);
@@ -286,31 +282,14 @@ function InvoiceList() {
   );
 
   const renderPagination = () => (
-    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
-      <FormControl sx={{ minWidth: 120 }}>
-        <InputLabel>Hiển thị</InputLabel>
-        <Select
-          value={rowsPerPage}
-          onChange={handleChangeRowsPerPage}
-          label="Hiển thị"
-          size="small"
-        >
-          <MenuItem value={10}>10</MenuItem>
-          <MenuItem value={20}>20</MenuItem>
-          <MenuItem value={50}>50</MenuItem>
-        </Select>
-      </FormControl>
-      <TablePagination
-        component="div"
-        count={totalInvoices}
-        page={page}
-        onPageChange={handleChangePage}
-        rowsPerPage={rowsPerPage}
-        onRowsPerPageChange={handleChangeRowsPerPage}
-        labelRowsPerPage="Số hàng mỗi trang:"
-        labelDisplayedRows={({ from, to, count }) => `${from}-${to} của ${count}`}
-      />
-    </Box>
+    <Pagination
+      total={totalInvoices}
+      page={page}
+      rowsPerPage={rowsPerPage}
+      onPageChange={handleChangePage}
+      onRowsPerPageChange={handleChangeRowsPerPage}
+      rowsPerPageOptions={[10, 20, 50]}
+    />
   );
 
   return (

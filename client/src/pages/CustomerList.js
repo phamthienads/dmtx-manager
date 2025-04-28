@@ -30,6 +30,7 @@ import {
 } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, Visibility as VisibilityIcon, Search as SearchIcon } from '@mui/icons-material';
 import axiosInstance from '../utils/axios';
+import Pagination from '../components/Pagination';
 
 function CustomerList() {
   const [customers, setCustomers] = useState([]);
@@ -320,15 +321,13 @@ function CustomerList() {
 
       {isMobile ? renderMobileView() : renderDesktopView()}
 
-      <TablePagination
-        component="div"
-        count={totalCustomers}
+      <Pagination
+        total={totalCustomers}
         page={page}
-        onPageChange={handleChangePage}
         rowsPerPage={rowsPerPage}
+        onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
-        labelRowsPerPage="Số hàng mỗi trang:"
-        labelDisplayedRows={({ from, to, count }) => `${from}-${to} của ${count}`}
+        rowsPerPageOptions={[20, 50, 100]}
       />
     </Container>
   );

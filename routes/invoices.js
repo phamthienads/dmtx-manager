@@ -210,4 +210,80 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+// Get revenue by month
+router.get('/revenue/monthly', async (req, res) => {
+  try {
+    const { month, year } = req.query;
+    
+    // Nếu không có tham số, lấy tháng hiện tại
+    const currentDate = new Date();
+    const targetMonth = month ? parseInt(month) - 1 : currentDate.getMonth();
+    const targetYear = year ? parseInt(year) : currentDate.getFullYear();
+    
+    // Tạo ngày đầu tháng và cuối tháng
+    const startDate = new Date(targetYear, targetMonth, 1);
+    const endDate = new Date(targetYear, targetMonth + 1, 0, 23, 59, 59);
+    
+    // Tạo ngày đầu tháng trước và cuối tháng trước
+    const prevMonth = targetMonth === 0 ? 11 : targetMonth - 1;
+    const prevYear = targetMonth === 0 ? targetYear - 1 : targetYear;
+    const prevStartDate = new Date(prevYear, prevMonth, 1);
+    const prevEndDate = new Date(prevYear, prevMonth + 1, 0, 23, 59, 59);
+    
+    // Truy vấn doanh thu tháng hiện tại
+    const currentMonthRevenue = await Invoice.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: startDate, $lte: endDate },
+          status: 'paid' // Chỉ tính các hóa đơn đã thanh toán
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: '$totalAmount' }
+        }
+      }
+    ]);
+    
+    // Truy vấn doanh thu tháng trước
+    const prevMonthRevenue = await Invoice.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: prevStartDate, $lte: prevEndDate },
+          status: 'paid' // Chỉ tính các hóa đơn đã thanh toán
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: '$totalAmount' }
+        }
+      }
+    ]);
+    
+    // Tính phần trăm tăng trưởng
+    const currentTotal = currentMonthRevenue.length > 0 ? currentMonthRevenue[0].total : 0;
+    const prevTotal = prevMonthRevenue.length > 0 ? prevMonthRevenue[0].total : 0;
+    const growthRate = prevTotal > 0 ? ((currentTotal - prevTotal) / prevTotal) * 100 : 0;
+    
+    res.json({
+      currentMonth: {
+        month: targetMonth + 1,
+        year: targetYear,
+        revenue: currentTotal
+      },
+      previousMonth: {
+        month: prevMonth + 1,
+        year: prevYear,
+        revenue: prevTotal
+      },
+      growthRate: growthRate
+    });
+  } catch (err) {
+    console.error('Error fetching monthly revenue:', err);
+    res.status(500).json({ message: err.message });
+  }
+});
+
 module.exports = router; 
