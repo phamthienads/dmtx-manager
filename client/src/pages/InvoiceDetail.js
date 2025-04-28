@@ -772,6 +772,34 @@ function InvoiceDetail() {
                         </Typography>
                       </Box>
                     )}
+                    {invoice.status === 'debt' && (
+                      <>
+                        <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+                          <Typography 
+                            variant="body2" 
+                            color="text.secondary" 
+                            sx={{ minWidth: 120 }}
+                          >
+                            Đã thanh toán:
+                          </Typography>
+                          <Typography variant="body1" color="success.main">
+                            {formatMoney(invoice.paidAmount || 0)}
+                          </Typography>
+                        </Box>
+                        <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+                          <Typography 
+                            variant="body2" 
+                            color="text.secondary" 
+                            sx={{ minWidth: 120 }}
+                          >
+                            Còn lại:
+                          </Typography>
+                          <Typography variant="body1" color="error.main">
+                            {formatMoney(invoice.remainingAmount || invoice.totalAmount)}
+                          </Typography>
+                        </Box>
+                      </>
+                    )}
                   </Box>
                 </Paper>
               </Grid>

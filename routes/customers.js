@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Customer = require('../models/Customer');
+const Invoice = require('../models/Invoice');
 
 // Get total customers count
 router.get('/count', async (req, res) => {
@@ -29,18 +30,55 @@ router.get('/', async (req, res) => {
 
     const skip = (page - 1) * limit;
     
-    const [customers, total] = await Promise.all([
-      Customer.find(query)
-        .select('name phone email customerType createdAt')
-        .sort(sort)
-        .skip(skip)
-        .limit(parseInt(limit))
-        .lean(),
-      Customer.countDocuments(query)
-    ]);
+    // Lấy danh sách khách hàng
+    const customers = await Customer.find(query)
+      .select('name phone email customerType createdAt')
+      .skip(skip)
+      .limit(parseInt(limit))
+      .lean();
+
+    // Lấy thông tin hóa đơn cuối cùng cho mỗi khách hàng
+    const customersWithLastInvoice = await Promise.all(
+      customers.map(async (customer) => {
+        const lastInvoice = await Invoice.findOne({ customer: customer._id })
+          .sort({ createdAt: -1 })
+          .select('invoiceCode createdAt totalAmount status')
+          .lean();
+        
+        return {
+          ...customer,
+          lastInvoice: lastInvoice ? {
+            invoiceCode: lastInvoice.invoiceCode,
+            createdAt: lastInvoice.createdAt,
+            totalAmount: lastInvoice.totalAmount,
+            status: lastInvoice.status
+          } : null
+        };
+      })
+    );
+
+    // Sắp xếp theo hóa đơn lần cuối nếu được yêu cầu
+    if (sort === 'lastInvoice' || sort === '-lastInvoice') {
+      customersWithLastInvoice.sort((a, b) => {
+        const dateA = a.lastInvoice ? new Date(a.lastInvoice.createdAt) : new Date(0);
+        const dateB = b.lastInvoice ? new Date(b.lastInvoice.createdAt) : new Date(0);
+        return sort === 'lastInvoice' ? dateA - dateB : dateB - dateA;
+      });
+    } else {
+      // Sắp xếp theo các trường khác
+      customersWithLastInvoice.sort((a, b) => {
+        if (sort.startsWith('-')) {
+          const field = sort.substring(1);
+          return b[field] > a[field] ? 1 : -1;
+        }
+        return a[sort] > b[sort] ? 1 : -1;
+      });
+    }
+
+    const total = await Customer.countDocuments(query);
 
     res.json({
-      customers,
+      customers: customersWithLastInvoice,
       pagination: {
         total,
         page: parseInt(page),

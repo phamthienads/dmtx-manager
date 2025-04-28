@@ -41,8 +41,9 @@ function InvoiceForm() {
     invoiceType: 'retail',
     status: 'paid',
     items: [{ product: '', quantity: 1, price: 0, discount: 0 }],
-    debtStartDate: '',
     debtEndDate: '',
+    paidAmount: 0,
+    remainingAmount: 0,
     createdAt: new Date().toISOString().split('T')[0]
   });
   const navigate = useNavigate();
@@ -132,9 +133,10 @@ function InvoiceForm() {
         status: invoiceData.status || 'paid',
         invoiceCode: invoiceData.invoiceCode || '',
         items: items.length > 0 ? items : [{ product: '', quantity: 1, price: 0, discount: 0 }],
-        debtStartDate: invoiceData.debtStartDate || '',
         debtEndDate: invoiceData.debtEndDate ? new Date(invoiceData.debtEndDate).toISOString().split('T')[0] : '',
-        createdAt: invoiceData.createdAt ? new Date(invoiceData.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
+        createdAt: invoiceData.createdAt ? new Date(invoiceData.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        paidAmount: invoiceData.paidAmount || 0,
+        remainingAmount: invoiceData.remainingAmount || calculateInvoiceTotal(items)
       });
     } catch (error) {
       console.error('Error fetching invoice:', error);
@@ -179,11 +181,21 @@ function InvoiceForm() {
       }));
     }
 
-    // Nếu thay đổi trạng thái thành công nợ, tự động lấy ngày hiện tại làm ngày bắt đầu
+    // Nếu thay đổi trạng thái thành công nợ, tự động cập nhật số tiền còn lại
     if (name === 'status' && value === 'debt') {
       setFormData(prev => ({
         ...prev,
-        debtStartDate: new Date().toISOString().split('T')[0]
+        remainingAmount: calculateTotal()
+      }));
+    }
+
+    // Nếu thay đổi số tiền đã trả, tự động cập nhật số tiền còn lại
+    if (name === 'paidAmount') {
+      const paidAmount = Number(value) || 0;
+      setFormData(prev => ({
+        ...prev,
+        paidAmount,
+        remainingAmount: Math.max(0, calculateTotal() - paidAmount)
       }));
     }
   };
@@ -308,8 +320,9 @@ function InvoiceForm() {
 
       // Thêm thông tin công nợ nếu là hóa đơn công nợ
       if (formData.status === 'debt') {
-        data.debtStartDate = formData.debtStartDate;
         data.debtEndDate = formData.debtEndDate;
+        data.paidAmount = Number(formData.paidAmount) || 0;
+        data.remainingAmount = Number(formData.remainingAmount) || calculateTotal();
       }
 
       if (isEdit) {
@@ -615,32 +628,6 @@ function InvoiceForm() {
               <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
-                  label="Ngày bắt đầu"
-                  type="date"
-                  name="debtStartDate"
-                  value={formData.debtStartDate}
-                  onChange={handleChange}
-                  InputLabelProps={{ shrink: true }}
-                  disabled
-                  size="medium"
-                  sx={{
-                    '& .MuiInputBase-input': {
-                      fontSize: '1rem',
-                      padding: '16px 20px',
-                      height: 'auto'
-                    },
-                    '& .MuiOutlinedInput-root': {
-                      height: 'auto'
-                    },
-                    '& .MuiInputBase-root': {
-                      height: '56px'
-                    }
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
                   label="Hạn thanh toán"
                   type="date"
                   name="debtEndDate"
@@ -660,6 +647,34 @@ function InvoiceForm() {
                     '& .MuiInputBase-root': {
                       height: '56px'
                     }
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Số tiền đã trả"
+                  type="number"
+                  name="paidAmount"
+                  value={formData.paidAmount}
+                  onChange={handleChange}
+                  size="medium"
+                  InputProps={{
+                    startAdornment: <Typography sx={{ mr: 1 }}>₫</Typography>
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Số tiền còn lại"
+                  type="number"
+                  name="remainingAmount"
+                  value={formData.remainingAmount}
+                  disabled
+                  size="medium"
+                  InputProps={{
+                    startAdornment: <Typography sx={{ mr: 1 }}>₫</Typography>
                   }}
                 />
               </Grid>

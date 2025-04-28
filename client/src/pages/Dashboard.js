@@ -12,7 +12,12 @@ import {
   Stack,
   Divider,
   CircularProgress,
-  Alert
+  Alert,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemAvatar,
+  Avatar
 } from '@mui/material';
 import {
   People as PeopleIcon,
@@ -20,7 +25,9 @@ import {
   Receipt as ReceiptIcon,
   Add as AddIcon,
   TrendingUp as TrendingUpIcon,
-  TrendingDown as TrendingDownIcon
+  TrendingDown as TrendingDownIcon,
+  AccountBalance as AccountBalanceIcon,
+  Warning as WarningIcon
 } from '@mui/icons-material';
 import axiosInstance from '../utils/axios';
 import { formatMoney } from '../utils/moneyUtils';
@@ -36,6 +43,10 @@ function Dashboard() {
     previousMonth: { month: 0, year: 0, revenue: 0 },
     growthRate: 0
   });
+  const [debt, setDebt] = useState({
+    totalDebt: 0,
+    topDebtCustomers: []
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
@@ -49,11 +60,12 @@ function Dashboard() {
       setLoading(true);
       setError(null);
       
-      const [customersRes, productsRes, invoicesRes, revenueRes] = await Promise.all([
+      const [customersRes, productsRes, invoicesRes, revenueRes, debtRes] = await Promise.all([
         axiosInstance.get('/api/customers/count'),
         axiosInstance.get('/api/products/count'),
         axiosInstance.get('/api/invoices/count'),
-        axiosInstance.get('/api/invoices/revenue/monthly')
+        axiosInstance.get('/api/invoices/revenue/monthly'),
+        axiosInstance.get('/api/invoices/debt/summary')
       ]);
 
       setStats({
@@ -63,6 +75,7 @@ function Dashboard() {
       });
       
       setRevenue(revenueRes.data);
+      setDebt(debtRes.data);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
       setError('Không thể tải dữ liệu. Vui lòng thử lại sau.');
@@ -138,6 +151,51 @@ function Dashboard() {
     </Card>
   );
 
+  const DebtCard = ({ totalDebt, topDebtCustomers }) => (
+    <Card sx={{ height: '100%' }}>
+      <CardContent>
+        <Box display="flex" alignItems="center" mb={2}>
+          <AccountBalanceIcon color="error" />
+          <Typography variant="h6" component="div" sx={{ ml: 1 }}>
+            Công Nợ
+          </Typography>
+        </Box>
+        <Typography variant="h4" component="div" color="error">
+          {formatMoney(totalDebt)}
+        </Typography>
+        <Typography variant="subtitle2" color="text.secondary" sx={{ mt: 1, mb: 2 }}>
+          Top 5 khách hàng có công nợ cao nhất
+        </Typography>
+        <List>
+          {topDebtCustomers.map((customer) => (
+            <ListItem key={customer._id} sx={{ px: 0 }}>
+              <ListItemAvatar>
+                <Avatar sx={{ bgcolor: 'error.light' }}>
+                  <WarningIcon />
+                </Avatar>
+              </ListItemAvatar>
+              <ListItemText
+                primary={customer.customerInfo.name}
+                secondary={`${formatMoney(customer.totalDebt)} - ${customer.customerInfo.phone}`}
+              />
+            </ListItem>
+          ))}
+        </List>
+      </CardContent>
+      <CardActions>
+        <Button
+          size="small"
+          onClick={() => navigate('/invoices')}
+          variant="outlined"
+          color="error"
+          sx={{ width: '100%' }}
+        >
+          Xem tất cả hóa đơn
+        </Button>
+      </CardActions>
+    </Card>
+  );
+
   if (loading) {
     return (
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4, textAlign: 'center' }}>
@@ -175,18 +233,24 @@ function Dashboard() {
       </Typography>
 
       <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
+        <Grid item xs={12} md={4}>
           <RevenueCard 
             title={`Doanh Thu Tháng ${revenue.currentMonth.month}/${revenue.currentMonth.year}`}
             revenue={revenue.currentMonth.revenue}
             growthRate={revenue.growthRate}
           />
         </Grid>
-        <Grid item xs={12} md={6}>
+        <Grid item xs={12} md={4}>
           <RevenueCard 
             title={`Doanh Thu Tháng ${revenue.previousMonth.month}/${revenue.previousMonth.year}`}
             revenue={revenue.previousMonth.revenue}
             growthRate={0}
+          />
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <DebtCard 
+            totalDebt={debt.totalDebt}
+            topDebtCustomers={debt.topDebtCustomers}
           />
         </Grid>
       </Grid>

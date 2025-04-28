@@ -48,6 +48,14 @@ const invoiceSchema = new mongoose.Schema({
     enum: ['paid', 'debt'],
     default: 'paid'
   },
+  paidAmount: {
+    type: Number,
+    default: 0
+  },
+  remainingAmount: {
+    type: Number,
+    default: 0
+  },
   debtEndDate: {
     type: Date
   },

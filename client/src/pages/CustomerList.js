@@ -28,9 +28,10 @@ import {
   MenuItem,
   InputLabel
 } from '@mui/material';
-import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, Visibility as VisibilityIcon, Search as SearchIcon } from '@mui/icons-material';
+import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, Visibility as VisibilityIcon, Search as SearchIcon, ArrowUpward as ArrowUpwardIcon, ArrowDownward as ArrowDownwardIcon } from '@mui/icons-material';
 import axiosInstance from '../utils/axios';
 import Pagination from '../components/Pagination';
+import { formatMoney } from '../utils/moneyUtils';
 
 function CustomerList() {
   const [customers, setCustomers] = useState([]);
@@ -38,13 +39,14 @@ function CustomerList() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(20);
   const [totalCustomers, setTotalCustomers] = useState(0);
+  const [sortOrder, setSortOrder] = useState('name');
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   useEffect(() => {
     fetchCustomers();
-  }, [page, rowsPerPage, searchTerm]);
+  }, [page, rowsPerPage, searchTerm, sortOrder]);
 
   const fetchCustomers = async () => {
     try {
@@ -53,7 +55,7 @@ function CustomerList() {
           search: searchTerm,
           page: page + 1,
           limit: rowsPerPage,
-          sort: 'name'
+          sort: sortOrder
         }
       });
       setCustomers(response.data.customers);
@@ -102,6 +104,45 @@ function CustomerList() {
     }
   };
 
+  const getStatusText = (status) => {
+    switch (status) {
+      case 'paid':
+        return 'Đã Thanh Toán';
+      case 'debt':
+        return 'Công Nợ';
+      default:
+        return status;
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'paid':
+        return 'success';
+      case 'debt':
+        return 'secondary';
+      default:
+        return 'default';
+    }
+  };
+
+  const getLastInvoiceColor = (date) => {
+    if (!date) return 'text.primary';
+    
+    const today = new Date();
+    const invoiceDate = new Date(date);
+    const diffTime = Math.abs(today - invoiceDate);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays <= 7) {
+      return 'success.main'; // Màu xanh lá cho hóa đơn trong 1 tuần
+    } else if (diffDays <= 14) {
+      return 'warning.main'; // Màu vàng cho hóa đơn trong 2 tuần
+    } else {
+      return 'error.main'; // Màu đỏ cho hóa đơn trên 2 tuần
+    }
+  };
+
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
@@ -109,6 +150,10 @@ function CustomerList() {
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
+  };
+
+  const handleSort = () => {
+    setSortOrder(sortOrder === 'lastInvoice' ? '-lastInvoice' : 'lastInvoice');
   };
 
   const renderMobileView = () => (
@@ -124,6 +169,7 @@ function CustomerList() {
                     gutterBottom
                     sx={{ 
                       cursor: 'pointer',
+                      fontWeight: 'bold',
                       '&:hover': {
                         color: 'primary.main'
                       }
@@ -181,16 +227,27 @@ function CustomerList() {
                     {customer.address || '-'}
                   </Typography>
                 </Grid>
-                {customer.taxCode && (
-                  <Grid item xs={12}>
-                    <Typography variant="body2" color="textSecondary">
-                      Mã số thuế:
-                    </Typography>
-                    <Typography variant="body1">
-                      {customer.taxCode}
-                    </Typography>
-                  </Grid>
-                )}
+                <Grid item xs={12}>
+                  <Typography variant="body2" color="textSecondary">
+                    Hóa đơn lần cuối:
+                  </Typography>
+                  {customer.lastInvoice ? (
+                    <Chip
+                      label={new Date(customer.lastInvoice.createdAt).toLocaleDateString('vi-VN')}
+                      color={
+                        new Date(customer.lastInvoice.createdAt) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) 
+                          ? 'success' 
+                          : new Date(customer.lastInvoice.createdAt) > new Date(Date.now() - 14 * 24 * 60 * 60 * 1000)
+                            ? 'warning'
+                            : 'error'
+                      }
+                      size="small"
+                      sx={{ mt: 0.5, fontWeight: 'medium' }}
+                    />
+                  ) : (
+                    <Typography variant="body1">-</Typography>
+                  )}
+                </Grid>
               </Grid>
             </CardContent>
           </Card>
@@ -208,7 +265,13 @@ function CustomerList() {
             <TableCell>Loại Khách Hàng</TableCell>
             <TableCell>Số Điện Thoại</TableCell>
             <TableCell>Địa Chỉ</TableCell>
-            <TableCell>Mã Số Thuế</TableCell>
+            <TableCell>
+              <Box display="flex" alignItems="center" sx={{ cursor: 'pointer' }} onClick={handleSort}>
+                Hóa Đơn Lần Cuối
+                {sortOrder === 'lastInvoice' ? <ArrowUpwardIcon fontSize="small" /> : 
+                 sortOrder === '-lastInvoice' ? <ArrowDownwardIcon fontSize="small" /> : null}
+              </Box>
+            </TableCell>
             <TableCell>Thao Tác</TableCell>
           </TableRow>
         </TableHead>
@@ -219,6 +282,7 @@ function CustomerList() {
                 <Typography
                   sx={{ 
                     cursor: 'pointer',
+                    fontWeight: 'bold',
                     '&:hover': {
                       color: 'primary.main'
                     }
@@ -237,7 +301,22 @@ function CustomerList() {
               </TableCell>
               <TableCell>{customer.phone || '-'}</TableCell>
               <TableCell>{customer.address || '-'}</TableCell>
-              <TableCell>{customer.taxCode || '-'}</TableCell>
+              <TableCell>
+                {customer.lastInvoice ? (
+                  <Chip
+                    label={new Date(customer.lastInvoice.createdAt).toLocaleDateString('vi-VN')}
+                    color={
+                      new Date(customer.lastInvoice.createdAt) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) 
+                        ? 'success' 
+                        : new Date(customer.lastInvoice.createdAt) > new Date(Date.now() - 14 * 24 * 60 * 60 * 1000)
+                          ? 'warning'
+                          : 'error'
+                    }
+                    size="small"
+                    sx={{ fontWeight: 'medium' }}
+                  />
+                ) : '-'}
+              </TableCell>
               <TableCell>
                 <IconButton
                   color="primary"

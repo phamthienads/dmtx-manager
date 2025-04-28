@@ -143,6 +143,11 @@ function CustomerDetail() {
             <Typography variant="body2" color="text.secondary">
               Tổng tiền: {formatMoney(invoice.totalAmount)}
             </Typography>
+            {invoice.status === 'debt' && (
+              <Typography variant="body2" color="error">
+                Còn nợ: {formatMoney(invoice.remainingAmount || 0)}
+              </Typography>
+            )}
             <Typography variant="body2" color="text.secondary">
               Ngày: {new Date(invoice.createdAt).toLocaleDateString('vi-VN')}
             </Typography>
@@ -174,8 +179,8 @@ function CustomerDetail() {
           <TableRow>
             <TableCell>Mã Hóa Đơn</TableCell>
             <TableCell>Loại Hóa Đơn</TableCell>
-            <TableCell>Số Sản Phẩm</TableCell>
             <TableCell>Tổng Tiền</TableCell>
+            <TableCell>Số Tiền Công Nợ</TableCell>
             <TableCell>Trạng Thái</TableCell>
             <TableCell>Ngày Xuất Hoá Đơn</TableCell>
             <TableCell>Thao Tác</TableCell>
@@ -197,8 +202,10 @@ function CustomerDetail() {
                 </Typography>
               </TableCell>
               <TableCell>{getInvoiceTypeText(invoice.invoiceType)}</TableCell>
-              <TableCell>{invoice.items.length}</TableCell>
               <TableCell>{formatMoney(invoice.totalAmount)}</TableCell>
+              <TableCell>
+                {invoice.status === 'debt' ? formatMoney(invoice.remainingAmount || 0) : '-'}
+              </TableCell>
               <TableCell>
                 <Chip
                   label={getStatusText(invoice.status)}

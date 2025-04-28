@@ -50,7 +50,7 @@ router.get('/', async (req, res) => {
 
     const [invoices, total] = await Promise.all([
       Invoice.find(query)
-        .select('invoiceCode invoiceType totalAmount status createdAt customer items')
+        .select('invoiceCode invoiceType totalAmount status createdAt customer items paidAmount remainingAmount')
         .populate('customer', 'name phone email customerType')
         .populate('items.product', 'name code retailPrice wholesalePrice')
         .sort(sort)
@@ -186,8 +186,12 @@ router.patch('/:id', async (req, res) => {
     // Cập nhật thông tin công nợ
     if (req.body.status === 'debt') {
       invoice.debtEndDate = req.body.debtEndDate;
+      invoice.paidAmount = Number(req.body.paidAmount) || 0;
+      invoice.remainingAmount = Number(req.body.remainingAmount) || invoice.totalAmount;
     } else {
       invoice.debtEndDate = null;
+      invoice.paidAmount = 0;
+      invoice.remainingAmount = 0;
     }
 
     const updatedInvoice = await invoice.save();
@@ -235,7 +239,7 @@ router.get('/revenue/monthly', async (req, res) => {
       {
         $match: {
           createdAt: { $gte: startDate, $lte: endDate },
-          status: 'paid' // Chỉ tính các hóa đơn đã thanh toán
+          status: { $in: ['paid', 'debt'] } // Tính cả hóa đơn đã thanh toán và công nợ
         }
       },
       {
@@ -251,7 +255,7 @@ router.get('/revenue/monthly', async (req, res) => {
       {
         $match: {
           createdAt: { $gte: prevStartDate, $lte: prevEndDate },
-          status: 'paid' // Chỉ tính các hóa đơn đã thanh toán
+          status: { $in: ['paid', 'debt'] } // Tính cả hóa đơn đã thanh toán và công nợ
         }
       },
       {
@@ -282,6 +286,73 @@ router.get('/revenue/monthly', async (req, res) => {
     });
   } catch (err) {
     console.error('Error fetching monthly revenue:', err);
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Get debt information
+router.get('/debt/summary', async (req, res) => {
+  try {
+    // Lấy tổng công nợ
+    const totalDebt = await Invoice.aggregate([
+      {
+        $match: {
+          status: 'debt'
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: '$remainingAmount' }
+        }
+      }
+    ]);
+
+    // Lấy danh sách khách hàng có công nợ cao nhất
+    const topDebtCustomers = await Invoice.aggregate([
+      {
+        $match: {
+          status: 'debt'
+        }
+      },
+      {
+        $group: {
+          _id: '$customer',
+          totalDebt: { $sum: '$remainingAmount' }
+        }
+      },
+      {
+        $sort: { totalDebt: -1 }
+      },
+      {
+        $limit: 5
+      },
+      {
+        $lookup: {
+          from: 'customers',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'customerInfo'
+        }
+      },
+      {
+        $unwind: '$customerInfo'
+      },
+      {
+        $project: {
+          _id: 1,
+          totalDebt: 1,
+          'customerInfo.name': 1,
+          'customerInfo.phone': 1
+        }
+      }
+    ]);
+
+    res.json({
+      totalDebt: totalDebt[0]?.total || 0,
+      topDebtCustomers
+    });
+  } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
