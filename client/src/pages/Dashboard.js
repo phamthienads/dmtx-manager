@@ -171,7 +171,7 @@ function Dashboard() {
           textOverflow: 'ellipsis'
         }}
       >
-        Bảng Điều Khiển
+        Tổng Quan
       </Typography>
 
       <Grid container spacing={3}>

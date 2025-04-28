@@ -50,9 +50,9 @@ function InvoiceList() {
         }
       });
       
-      if (response.data && Array.isArray(response.data.invoices)) {
+      if (response.data && response.data.invoices) {
         setInvoices(response.data.invoices);
-        setTotalInvoices(response.data.total || 0);
+        setTotalInvoices(response.data.pagination.total || 0);
       } else {
         setInvoices([]);
         setTotalInvoices(0);
