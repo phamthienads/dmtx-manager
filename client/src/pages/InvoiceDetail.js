@@ -71,16 +71,57 @@ function InvoiceDetail() {
       printWindow.document.write(`
         <html>
           <head>
-            <title>Hóa Đơn Bán Hàng</title>
+            <title>HÓA ĐƠN BÁN HÀNG</title>
             <style>
+              @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&family=Merriweather:wght@400;700&family=Lora:wght@400;500;600;700&display=swap');
               @page {
                 size: A4;
                 margin: 1cm;
               }
               body {
-                font-family: Arial, sans-serif;
+                font-family: 'Lexend', sans-serif;
                 margin: 0;
                 padding: 20px;
+              }
+              .header {
+                display: flex;
+                align-items: flex-start;
+                margin-bottom: 30px;
+              }
+              .logo {
+                width: 200px;
+                margin-right: 50px;
+              }
+              .company-info {
+                flex-grow: 1;
+                text-align: left;
+                font-size: 14px;
+                line-height: 1.5;
+              }
+              .company-name {
+                font-size: 24px;
+                font-weight: bold;
+                margin: 0 0 10px 0;
+              }
+              .invoice-title {
+                text-align: center;
+                font-size: 24px;
+                font-weight: bold;
+                margin: 20px 0 5px 0;
+              }
+              .invoice-date {
+                text-align: center;
+                margin-bottom: 20px;
+                font-size: 14px;
+              }
+              .customer-info {
+                margin-bottom: 20px;
+                font-size: 14px;
+              }
+              .customer-info div {
+                font-family: 'Merriweather', serif;
+                font-size: 21px;
+                font-weight: 700;
               }
               .header {
                 display: flex;
@@ -125,24 +166,88 @@ function InvoiceDetail() {
                 width: 100%;
                 border-collapse: collapse;
                 margin-bottom: 20px;
+                table-layout: fixed;
               }
               th, td {
                 border: 1px solid #ddd;
                 padding: 8px;
                 text-align: left;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
               }
               th {
                 background-color: #f2f2f2;
+                font-weight: 600;
+                white-space: nowrap;
+                overflow: visible;
+                height: auto;
+                padding: 12px 8px;
+                font-size: 15px;
+                text-transform: uppercase;
+                text-align: center;
+              }
+              td {
+                font-size: 17px;
+                padding: 10px 8px;
+              }
+              /* Định nghĩa độ rộng cột */
+              th:nth-child(1), td:nth-child(1) { width: 8%; }  /* STT */
+              th:nth-child(2), td:nth-child(2) { width: 32%; } /* Tên sản phẩm */
+              th:nth-child(3), td:nth-child(3) { width: 18%; } /* Đơn giá */
+              th:nth-child(4), td:nth-child(4) { width: 12%; } /* Số lượng */
+              th:nth-child(5), td:nth-child(5) { width: 12%; } /* Chiết khấu */
+              th:nth-child(6), td:nth-child(6) { width: 18%; } /* Thành tiền */
+              /* Căn phải cho các cột số trong phần nội dung */
+              td:nth-child(3),
+              td:nth-child(5),
+              td:nth-child(6) {
+                text-align: right;
+              }
+              /* Căn giữa cho cột số thứ tự và số lượng */
+              td:nth-child(1),
+              td:nth-child(4) {
+                text-align: center;
               }
               .total {
                 text-align: right;
                 font-weight: bold;
                 margin-top: 20px;
+                font-family: 'Lora', serif;
+                font-size: 18px;
+                color: #ff0000;
+              }
+              .signatures {
+                display: flex;
+                justify-content: space-between;
+                margin-top: 50px;
+                padding: 0 50px;
+              }
+              .signature-box {
+                text-align: center;
+                width: 200px;
+              }
+              .signature-line {
+                border-top: 1px solid #000;
+                margin-top: 50px;
+                width: 100%;
+              }
+              .signature-title {
+                margin-top: 10px;
+                font-weight: bold;
+                font-size: 14px;
               }
               .footer {
                 margin-top: 40px;
                 text-align: center;
                 font-size: 12px;
+              }
+              /* Cho phép xuống dòng ở cột tên sản phẩm */
+              th:nth-child(2), td:nth-child(2) {
+                white-space: normal;
+                word-wrap: break-word;
+                min-height: 40px;
+                vertical-align: top;
               }
             </style>
           </head>
@@ -150,11 +255,11 @@ function InvoiceDetail() {
             <div class="header">
               <img src="${logoDataUrl}" alt="Logo" class="logo">
               <div class="company-info">
-                <div class="company-name">CÔNG TY TNHH DMTX</div>
-                <div>Địa chỉ: 123 Đường ABC, Quận XYZ, TP.HCM</div>
-                <div>Điện thoại: 0123 456 789</div>
-                <div>Email: info@dmtx.com</div>
-                <div>MST: 0123456789</div>
+                <div class="company-name">Điện Máy Thiên Xuân</div>
+                <div>Địa Chỉ: 130/33A Phú Định, P. 16, Q. 8</div>
+                <div>Kho Hàng: 79 Đường Số 10, P. An Lạc, Q. Bình Tân</div>
+                <div>SĐT: 0392.829.827 (Zalo) - 0987.098.033</div>
+                <div>Website: www.dienmaythienxuan.vn</div>
               </div>
             </div>
             
@@ -162,10 +267,7 @@ function InvoiceDetail() {
             <div class="invoice-date">Ngày: ${new Date(invoice.createdAt).toLocaleDateString('vi-VN')}</div>
             
             <div class="customer-info">
-              <h3>Thông tin khách hàng:</h3>
-              <div>Họ tên: ${invoice.customer ? invoice.customer.name : 'Khách hàng không xác định'}</div>
-              <div>Số điện thoại: ${invoice.customer ? invoice.customer.phone : '-'}</div>
-              <div>Địa chỉ: ${invoice.customer ? invoice.customer.address : '-'}</div>
+              <div>Người Mua: ${invoice.customer ? invoice.customer.name : 'Khách hàng không xác định'}</div>
             </div>
             
             <table>
@@ -173,10 +275,10 @@ function InvoiceDetail() {
                 <tr>
                   <th>STT</th>
                   <th>Tên sản phẩm</th>
-                  <th>Đơn giá</th>
-                  <th>Số lượng</th>
-                  <th>Chiết khấu</th>
-                  <th>Thành tiền</th>
+                  <th>Đơn Giá</th>
+                  <th>SL</th>
+                  <th>CK %</th>
+                  <th>Thành Tiền</th>
                 </tr>
               </thead>
               <tbody>
@@ -200,13 +302,22 @@ function InvoiceDetail() {
             </table>
             
             <div class="total">
-              <div>Tổng tiền: ${formatMoney(invoice.totalAmount)}</div>
-              <div>Trạng thái: ${getStatusText(invoice.status)}</div>
+              <div>TỔNG TIỀN THANH TOÁN: ${formatMoney(invoice.totalAmount)}</div>
+            </div>
+            
+            <div class="signatures">
+              <div class="signature-box">
+                <div class="signature-line"></div>
+                <div class="signature-title">Người Mua</div>
+              </div>
+              <div class="signature-box">
+                <div class="signature-line"></div>
+                <div class="signature-title">Người Bán</div>
+              </div>
             </div>
             
             <div class="footer">
               <p>Cảm ơn quý khách đã mua hàng!</p>
-              <p>Hóa đơn này được tạo tự động bởi hệ thống quản lý DMTX</p>
             </div>
           </body>
         </html>
