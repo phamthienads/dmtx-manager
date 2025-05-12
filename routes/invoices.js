@@ -5,11 +5,10 @@ const Customer = require('../models/Customer');
 const Product = require('../models/Product');
 
 // Hàm tạo mã hóa đơn
-const generateInvoiceCode = async (type = 'LE') => {
-  const now = new Date();
-  const day = String(now.getDate()).padStart(2, '0');
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const year = String(now.getFullYear()).slice(-2);
+const generateInvoiceCode = async (type = 'LE', date = new Date()) => {
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = String(date.getFullYear()).slice(-2);
   
   // Tạo mã ngẫu nhiên 5 ký tự
   const randomChars = Math.random().toString(36).substring(2, 7).toUpperCase();
@@ -20,7 +19,7 @@ const generateInvoiceCode = async (type = 'LE') => {
   const existingInvoice = await Invoice.findOne({ invoiceCode: code });
   if (existingInvoice) {
     // Nếu mã đã tồn tại, tạo lại
-    return generateInvoiceCode(type);
+    return generateInvoiceCode(type, date);
   }
   
   return code;
@@ -125,8 +124,9 @@ router.post('/', async (req, res) => {
       return sum + roundMoney(itemTotal - discountAmount);
     }, 0);
 
-    // Tạo mã hóa đơn
-    const invoiceCode = await generateInvoiceCode(req.body.invoiceType === 'wholesale' ? 'SI' : 'LE');
+    // Tạo mã hóa đơn với ngày tạo hóa đơn
+    const invoiceDate = req.body.createdAt ? new Date(req.body.createdAt) : new Date();
+    const invoiceCode = await generateInvoiceCode(req.body.invoiceType === 'wholesale' ? 'SI' : 'LE', invoiceDate);
 
     const invoice = new Invoice({
       customer: customer._id,
@@ -137,7 +137,7 @@ router.post('/', async (req, res) => {
       status: req.body.status || 'pending',
       debtStartDate: req.body.status === 'debt' ? req.body.debtStartDate : null,
       debtEndDate: req.body.status === 'debt' ? req.body.debtEndDate : null,
-      createdAt: req.body.createdAt ? new Date(req.body.createdAt) : new Date()
+      createdAt: invoiceDate
     });
 
     const newInvoice = await invoice.save();
